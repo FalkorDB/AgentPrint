@@ -15,7 +15,7 @@ export async function GET() {
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { githubStars: { sort: "desc", nulls: "last" } },
   });
 
   return NextResponse.json(projects);
