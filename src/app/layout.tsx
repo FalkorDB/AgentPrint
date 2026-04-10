@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
   description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
