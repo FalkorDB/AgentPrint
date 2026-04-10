@@ -60,6 +60,50 @@ export default function HomePage() {
     }
   }
 
+  /** Read SSE stream and update progress log. Returns true if sync completed successfully. */
+  async function readStream(res: Response, projectId: string): Promise<boolean> {
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let success = false;
+
+    if (reader) {
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.step) {
+                setProgressLog((prev) => {
+                  if (prev.length > 0 && prev[prev.length - 1].step === data.step) {
+                    return [...prev.slice(0, -1), { step: data.step, detail: data.detail }];
+                  }
+                  return [...prev, { step: data.step, detail: data.detail }];
+                });
+              }
+              if (data.done && !data.error) {
+                success = true;
+              }
+              if (data.error) {
+                setProgressLog((prev) => [...prev, { step: "❌ Error", detail: data.error }]);
+              }
+            } catch {
+              // skip malformed lines
+            }
+          }
+        }
+      }
+    }
+    return success;
+  }
+
   async function handleCollect(projectId: string) {
     setCollectingId(projectId);
     setProgressLog([]);
@@ -72,47 +116,13 @@ export default function HomePage() {
         body: JSON.stringify({ projectId }),
       });
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (reader) {
-        let buffer = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.step) {
-                  setProgressLog((prev) => {
-                    // Same step name → update in place (e.g. "Fetching reviews… 6/100 → 7/100")
-                    if (prev.length > 0 && prev[prev.length - 1].step === data.step) {
-                      return [...prev.slice(0, -1), { step: data.step, detail: data.detail }];
-                    }
-                    return [...prev, { step: data.step, detail: data.detail }];
-                  });
-                }
-                if (data.error) {
-                  setProgressLog((prev) => [...prev, { step: "❌ Error", detail: data.error }]);
-                }
-              } catch {
-                // skip malformed lines
-              }
-            }
-          }
-        }
-      }
+      const success = await readStream(res, projectId);
 
       await fetchProjects();
-      setSyncDone(true);
-      // Auto-navigate to project dashboard after a short delay
-      setTimeout(() => router.push(`/projects/${projectId}`), 1500);
+      if (success) {
+        setSyncDone(true);
+        setTimeout(() => router.push(`/projects/${projectId}`), 1500);
+      }
     } finally {
       setCollectingId(null);
     }
