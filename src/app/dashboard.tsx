@@ -17,11 +17,17 @@ interface Project {
   };
 }
 
+interface ProgressEntry {
+  step: string;
+  detail?: string;
+}
+
 export default function HomePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [collectingId, setCollectingId] = useState<string | null>(null);
+  const [progressLog, setProgressLog] = useState<ProgressEntry[]>([]);
 
   const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
@@ -53,12 +59,46 @@ export default function HomePage() {
 
   async function handleCollect(projectId: string) {
     setCollectingId(projectId);
+    setProgressLog([]);
+
     try {
-      await fetch("/api/collect", {
+      const res = await fetch("/api/collect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectId }),
       });
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.step) {
+                  setProgressLog((prev) => [...prev, { step: data.step, detail: data.detail }]);
+                }
+                if (data.error) {
+                  setProgressLog((prev) => [...prev, { step: "❌ Error", detail: data.error }]);
+                }
+              } catch {
+                // skip malformed lines
+              }
+            }
+          }
+        }
+      }
+
       await fetchProjects();
     } finally {
       setCollectingId(null);
@@ -87,6 +127,27 @@ export default function HomePage() {
         </h2>
         <AddProjectForm onAdd={handleAdd} loading={adding} />
       </section>
+
+      {/* Progress panel */}
+      {collectingId && progressLog.length > 0 && (
+        <section className="mb-10 bg-gray-800 rounded-xl p-5 border border-gray-700">
+          <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            Syncing…
+          </h3>
+          <div className="max-h-48 overflow-y-auto space-y-1 font-mono text-sm">
+            {progressLog.map((entry, i) => (
+              <div key={i} className="flex gap-2">
+                <span className="text-gray-500 select-none">{String(i + 1).padStart(2, "\u00A0")}.</span>
+                <span className="text-gray-200">{entry.step}</span>
+                {entry.detail && (
+                  <span className="text-gray-500">— {entry.detail}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section>
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">

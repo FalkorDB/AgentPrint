@@ -12,13 +12,18 @@ export interface CollectionResult {
   fileStatsCollected: number;
 }
 
+export type ProgressCallback = (step: string, detail?: string) => void;
+
 /**
  * Collect all raw data for a project from GitHub API + git clone.
  * Supports incremental sync using RepoSyncState.
  */
 export async function collectProjectData(
-  projectId: string
+  projectId: string,
+  onProgress?: ProgressCallback
 ): Promise<CollectionResult> {
+  const progress = onProgress ?? (() => {});
+
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
     include: { syncState: true },
@@ -28,6 +33,7 @@ export async function collectProjectData(
   const syncState = project.syncState;
 
   // Auto-detect and update the default branch from GitHub
+  progress("Detecting default branch…");
   let defaultBranch = project.defaultBranch;
   try {
     const octokit = getOctokit();
@@ -42,17 +48,20 @@ export async function collectProjectData(
   } catch {
     // Keep stored value if API call fails
   }
+  progress("Detected branch", defaultBranch);
 
   const sinceDate = syncState?.lastCommitDate ?? undefined;
   const lastSha = syncState?.lastCommitSha ?? undefined;
 
   // 1. Fetch commits from GitHub API (for author login mapping)
+  progress("Fetching commits from GitHub API…");
   const apiCommits = await fetchCommits({
     owner,
     repo,
     sha: defaultBranch,
     since: sinceDate,
   });
+  progress("Commits fetched", `${apiCommits.length} commits`);
 
   // Build sha → login map for identity resolution
   const shaToLogin = new Map<string, string>();
@@ -63,6 +72,7 @@ export async function collectProjectData(
   }
 
   // 2. Get per-file changes from git clone (for accurate line counts with exclusions)
+  progress("Cloning repo & analyzing file changes…");
   const fileChanges = await getFileChanges(
     owner,
     repo,
@@ -70,16 +80,20 @@ export async function collectProjectData(
     sinceDate,
     lastSha ?? undefined
   );
+  progress("File changes analyzed", `${fileChanges.length} file changes`);
 
   // 3. Fetch PRs
+  progress("Fetching pull requests…");
   const prs = await fetchPullRequests({
     owner,
     repo,
     state: "all",
     since: syncState?.lastPrUpdatedAt ?? undefined,
   });
+  progress("Pull requests fetched", `${prs.length} PRs`);
 
   // 4. Persist commits + file stats
+  progress("Storing commits & file stats…");
   let commitsCollected = 0;
   let fileStatsCollected = 0;
 
@@ -132,8 +146,10 @@ export async function collectProjectData(
       // Skip duplicate commits
     }
   }
+  progress("Commits stored", `${commitsCollected} commits, ${fileStatsCollected} file stats`);
 
   // 5. Persist PRs
+  progress("Storing pull requests…");
   let prsCollected = 0;
   for (const pr of prs) {
     try {
@@ -164,10 +180,13 @@ export async function collectProjectData(
       // Skip errors
     }
   }
+  progress("PRs stored", `${prsCollected} PRs`);
 
   // 6. Fetch and persist reviews for new/updated PRs
   let reviewsCollected = 0;
-  for (const pr of prs) {
+  for (let i = 0; i < prs.length; i++) {
+    const pr = prs[i];
+    progress("Fetching reviews…", `PR #${pr.number} (${i + 1}/${prs.length})`);
     const reviews = await fetchPRReviews(owner, repo, pr.number);
     for (const review of reviews) {
       try {
@@ -190,8 +209,10 @@ export async function collectProjectData(
       }
     }
   }
+  progress("Reviews stored", `${reviewsCollected} reviews`);
 
   // 7. Update sync state
+  progress("Updating sync state…");
   const latestCommitDate =
     apiCommits.length > 0
       ? apiCommits.reduce((latest, c) =>
