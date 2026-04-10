@@ -193,7 +193,7 @@ export function ProjectList({
                   <button
                     onClick={() => onCollect(project.id)}
                     disabled={isSyncing}
-                    className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                    className="w-36 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                   >
                     {isSyncing ? "Syncing…" : "Sync & Compute"}
                   </button>
