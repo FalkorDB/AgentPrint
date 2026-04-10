@@ -166,7 +166,7 @@ export default function HomePage() {
       }));
 
       if (success && proj) {
-        setTimeout(() => window.open(`/projects/${proj.owner}/${proj.repo}`, "_blank"), 1500);
+        setTimeout(() => { window.location.href = `/projects/${proj.owner}/${proj.repo}`; }, 1500);
       }
     } catch {
       setSyncStates((prev) => ({
