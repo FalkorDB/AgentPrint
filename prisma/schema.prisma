@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Project {
+  id                      String   @id @default(cuid())
+  owner                   String
+  repo                    String
+  defaultBranch           String   @default("main")
+  githubAppInstallationId Int?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  commits        Commit[]
+  pullRequests   PullRequest[]
+  monthlyMetrics MonthlyMetric[]
+  syncState      RepoSyncState?
+
+  @@unique([owner, repo])
+}
+
+model Commit {
+  id          String   @id @default(cuid())
+  projectId   String
+  sha         String
+  authorLogin String?
+  authorEmail String?
+  authorName  String?
+  message     String?
+  committedAt DateTime
+
+  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fileStats CommitFileStat[]
+
+  @@unique([projectId, sha])
+  @@index([projectId, committedAt])
+  @@index([authorLogin])
+}
+
+model CommitFileStat {
+  id        String @id @default(cuid())
+  commitId  String
+  path      String
+  additions Int
+  deletions Int
+
+  commit Commit @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@index([commitId])
+}
+
+model PullRequest {
+  id          String    @id @default(cuid())
+  projectId   String
+  number      Int
+  authorLogin String?
+  title       String?
+  state       String    // open, closed, merged
+  merged      Boolean   @default(false)
+  createdAt   DateTime
+  mergedAt    DateTime?
+  closedAt    DateTime?
+
+  project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  reviews PullRequestReview[]
+
+  @@unique([projectId, number])
+  @@index([projectId, createdAt])
+  @@index([projectId, mergedAt])
+  @@index([projectId, closedAt])
+  @@index([authorLogin])
+}
+
+model PullRequestReview {
+  id            String   @id @default(cuid())
+  pullRequestId String
+  reviewerLogin String
+  state         String   // APPROVED, CHANGES_REQUESTED, COMMENTED, DISMISSED
+  submittedAt   DateTime
+
+  pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+
+  @@index([pullRequestId])
+  @@index([reviewerLogin])
+}
+
+model MonthlyMetric {
+  id                    String @id @default(cuid())
+  projectId             String
+  month                 String // YYYY-MM
+  metricVersion         Int    @default(1)
+  activeDevs            Int
+  activeCodeContributors Int
+  linesChangedPerDev    Float?
+  prMergeRatePerDev     Float?
+  prRejectionRate       Float?
+  firstTimeContribRatio Float?
+  medianTtmHours        Float?
+  medianTtcHours        Float?
+  computedAt            DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, month, metricVersion])
+  @@index([projectId, month])
+}
+
+model RepoSyncState {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  lastCommitSha   String?
+  lastCommitDate  DateTime?
+  lastPrUpdatedAt DateTime?
+  lastSyncAt      DateTime?
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
