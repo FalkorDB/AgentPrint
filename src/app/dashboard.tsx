@@ -214,7 +214,7 @@ export default function HomePage() {
       <header className="mb-10 flex items-start justify-between">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-            🚀 AgentPrint
+            <img src="/logo.png" alt="AgentPrint" className="inline h-10 w-10 mr-1 align-middle" /> AgentPrint
             <a
               href="https://github.com/FalkorDB/AgentPrint"
               target="_blank"

@@ -7,7 +7,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          🚀 AgentPrint
+          <img src="/logo.png" alt="AgentPrint" className="inline h-8 w-8 mr-1 align-middle" /> AgentPrint
           <a
             href="https://github.com/FalkorDB/AgentPrint"
             target="_blank"
