@@ -31,6 +31,7 @@ export default function HomePage() {
   const [collectingId, setCollectingId] = useState<string | null>(null);
   const [progressLog, setProgressLog] = useState<ProgressEntry[]>([]);
   const [syncDone, setSyncDone] = useState(false);
+  const [logExpanded, setLogExpanded] = useState(false);
 
   const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
@@ -151,28 +152,50 @@ export default function HomePage() {
         <AddProjectForm onAdd={handleAdd} loading={adding} />
       </section>
 
-      {/* Progress panel */}
+      {/* Progress panel — collapsed by default, shows only last active line */}
       {(collectingId || syncDone) && progressLog.length > 0 && (
-        <section className="mb-10 bg-gray-800 rounded-xl p-5 border border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-            {syncDone ? (
-              <span className="inline-block w-2 h-2 bg-blue-400 rounded-full" />
-            ) : (
-              <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            )}
-            {syncDone ? "Sync complete — redirecting to dashboard…" : "Syncing…"}
-          </h3>
-          <div className="max-h-48 overflow-y-auto space-y-1 font-mono text-sm">
-            {progressLog.map((entry, i) => (
-              <div key={i} className="flex gap-2">
-                <span className="text-gray-500 select-none">{String(i + 1).padStart(2, "\u00A0")}.</span>
-                <span className="text-gray-200">{entry.step}</span>
-                {entry.detail && (
-                  <span className="text-gray-500">— {entry.detail}</span>
-                )}
-              </div>
-            ))}
-          </div>
+        <section className="mb-10 bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+          <button
+            onClick={() => setLogExpanded((v) => !v)}
+            className="w-full px-5 py-3 flex items-center justify-between text-left hover:bg-gray-750 transition-colors"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {syncDone ? (
+                <span className="inline-block w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
+              ) : (
+                <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0" />
+              )}
+              {syncDone ? (
+                <span className="text-sm font-semibold text-gray-300">
+                  Sync complete — redirecting to dashboard…
+                </span>
+              ) : (
+                <span className="text-sm text-gray-200 font-mono truncate">
+                  {progressLog[progressLog.length - 1].step}
+                  {progressLog[progressLog.length - 1].detail && (
+                    <span className="text-gray-500"> — {progressLog[progressLog.length - 1].detail}</span>
+                  )}
+                </span>
+              )}
+            </div>
+            <span className="text-gray-500 text-xs flex-shrink-0 ml-3">
+              {logExpanded ? "▲ collapse" : `▼ ${progressLog.length} steps`}
+            </span>
+          </button>
+
+          {logExpanded && (
+            <div className="px-5 pb-4 max-h-48 overflow-y-auto space-y-1 font-mono text-sm border-t border-gray-700 pt-3">
+              {progressLog.map((entry, i) => (
+                <div key={i} className="flex gap-2">
+                  <span className="text-gray-500 select-none">{String(i + 1).padStart(2, "\u00A0")}.</span>
+                  <span className="text-gray-200">{entry.step}</span>
+                  {entry.detail && (
+                    <span className="text-gray-500">— {entry.detail}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
