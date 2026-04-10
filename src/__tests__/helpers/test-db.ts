@@ -34,6 +34,7 @@ export async function cleanDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.pullRequestReview.deleteMany();
   await prisma.commitFileStat.deleteMany();
   await prisma.monthlyMetric.deleteMany();
+  await prisma.starHistory.deleteMany();
   await prisma.repoSyncState.deleteMany();
   await prisma.pullRequest.deleteMany();
   await prisma.commit.deleteMany();

@@ -3,6 +3,7 @@ import { fetchPullRequests, fetchPRReviews } from "@/lib/github/pulls";
 import { fetchCommits } from "@/lib/github/commits";
 import { getFileChanges } from "./git-clone";
 import { isBot, getOctokit, setRateLimitNotify } from "@/lib/github/client";
+import { fetchStarHistory } from "@/lib/github/stars";
 
 export interface CollectionResult {
   projectId: string;
@@ -233,7 +234,32 @@ export async function collectProjectData(
     `${reviewsCollected} reviews${reviewErrors > 0 ? ` (${reviewErrors} PRs skipped due to errors)` : ""}`
   );
 
-  // 7. Update sync state
+  // 7. Fetch and store star history
+  progress("Fetching star history…");
+  try {
+    const { history, totalStars } = await fetchStarHistory(
+      owner,
+      repo,
+      (detail) => progress("Fetching star history…", detail)
+    );
+    for (const point of history) {
+      await prisma.starHistory.upsert({
+        where: { projectId_month: { projectId, month: point.month } },
+        update: { cumulativeStars: point.cumulativeStars },
+        create: { projectId, month: point.month, cumulativeStars: point.cumulativeStars },
+      });
+    }
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { githubStars: totalStars },
+    });
+    progress("Star history stored", `${history.length} months, ${totalStars} total stars`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    progress("⚠ Star history failed", msg);
+  }
+
+  // 8. Update sync state
   progress("Updating sync state…");
   const latestCommitDate =
     apiCommits.length > 0
