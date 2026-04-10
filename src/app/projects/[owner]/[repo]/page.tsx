@@ -58,7 +58,7 @@ export default function ProjectDetailPage() {
   }, [owner, repo]);
 
   useEffect(() => {
-    fetchMetrics();
+    fetchMetrics(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchMetrics]);
 
   // Filter metrics by date range

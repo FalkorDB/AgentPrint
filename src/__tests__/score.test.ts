@@ -5,7 +5,7 @@ vi.mock("@/lib/db", () => ({
   prisma: {},
 }));
 
-import { computeScore, type ScoreResult } from "@/lib/metrics/score";
+import { computeScore } from "@/lib/metrics/score";
 
 function makeMonth(
   month: string,
