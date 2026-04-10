@@ -75,13 +75,14 @@ export async function collectProjectData(
   }
 
   // 2. Get per-file changes from GitHub API (for accurate line counts with exclusions)
-  progress("Fetching per-file change stats…");
+  progress("Fetching per-file change stats…", "0 commits");
   const fileChanges = await getFileChanges(
     owner,
     repo,
     defaultBranch,
     sinceDate,
-    lastSha ?? undefined
+    lastSha ?? undefined,
+    (done, total) => progress("Fetching per-file change stats…", `${done}/${total} commits`)
   );
   progress("File changes analyzed", `${fileChanges.length} file changes`);
 

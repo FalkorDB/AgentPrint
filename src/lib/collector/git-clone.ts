@@ -31,6 +31,8 @@ export interface GitFileChange {
   deletions: number;
 }
 
+export type FileChangeProgress = (done: number, total: number) => void;
+
 /**
  * Fetch per-file changes from the GitHub API for each commit.
  * Replaces git clone — no system git binary needed.
@@ -40,7 +42,8 @@ export async function getFileChanges(
   repo: string,
   _branch: string,
   since?: Date,
-  lastSha?: string
+  lastSha?: string,
+  onProgress?: FileChangeProgress
 ): Promise<GitFileChange[]> {
   const octokit = getOctokit();
   const changes: GitFileChange[] = [];
@@ -66,8 +69,10 @@ export async function getFileChanges(
     }
   }
 
+  const total = commits.length;
+
   // Fetch file stats per commit (batched with concurrency limit)
-  const BATCH_SIZE = 5;
+  const BATCH_SIZE = 10;
   for (let i = 0; i < commits.length; i += BATCH_SIZE) {
     const batch = commits.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
@@ -100,6 +105,8 @@ export async function getFileChanges(
         }
       }
     }
+
+    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }
 
   return changes;
