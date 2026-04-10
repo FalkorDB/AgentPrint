@@ -269,6 +269,16 @@ export async function collectProjectData(
     },
   });
 
+  // Update cached GitHub stats with accurate DB counts
+  const [commitCount, prCount] = await Promise.all([
+    prisma.commit.count({ where: { projectId } }),
+    prisma.pullRequest.count({ where: { projectId } }),
+  ]);
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { githubCommitCount: commitCount, githubPrCount: prCount },
+  });
+
   // Detach rate-limit callback
   setRateLimitNotify(null);
 
