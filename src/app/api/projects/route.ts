@@ -48,8 +48,34 @@ export async function POST(request: NextRequest) {
     const octokit = getOctokit();
     const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
     if (!branch) branch = repoData.default_branch;
-    if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
     githubStars = repoData.stargazers_count;
+
+    // Get the actual first commit date (more accurate than repo created_at for forks/transfers)
+    try {
+      // Fetch page 1 to get total pages from Link header, then fetch last page
+      const firstPage = await octokit.rest.repos.listCommits({
+        owner, repo, sha: branch || repoData.default_branch, per_page: 1,
+      });
+      const linkHeader = firstPage.headers.link || "";
+      const lastPageMatch = linkHeader.match(/[&?]page=(\d+)>;\s*rel="last"/);
+      if (lastPageMatch) {
+        const lastPage = parseInt(lastPageMatch[1], 10);
+        const { data: oldest } = await octokit.rest.repos.listCommits({
+          owner, repo, sha: branch || repoData.default_branch, per_page: 1, page: lastPage,
+        });
+        if (oldest.length > 0) {
+          const date = oldest[0].commit.author?.date || oldest[0].commit.committer?.date;
+          if (date) githubCreatedAt = new Date(date);
+        }
+      } else if (firstPage.data.length > 0) {
+        // Only one page — single commit is both newest and oldest
+        const date = firstPage.data[0].commit.author?.date || firstPage.data[0].commit.committer?.date;
+        if (date) githubCreatedAt = new Date(date);
+      }
+    } catch {
+      // Fall back to repo creation date
+      if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
+    }
 
     // Fetch commit & PR counts in parallel via search API
     try {
