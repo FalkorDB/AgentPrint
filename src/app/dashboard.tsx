@@ -12,6 +12,9 @@ interface Project {
   defaultBranch: string;
   impactScore?: number | null;
   impactConfidence?: string | null;
+  githubCommitCount?: number | null;
+  githubPrCount?: number | null;
+  githubCreatedAt?: string | null;
   syncState?: { lastSyncAt: string | null } | null;
   _count: {
     commits: number;

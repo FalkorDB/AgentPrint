@@ -16,6 +16,11 @@ model Project {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
+  // Cached GitHub stats (populated on add, before first sync)
+  githubCommitCount Int?
+  githubPrCount     Int?
+  githubCreatedAt   DateTime?
+
   // Agent Impact Score
   impactScore           Float?
   impactConfidence      String?  // "low" | "medium" | "high"

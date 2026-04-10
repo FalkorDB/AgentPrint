@@ -39,23 +39,42 @@ export async function POST(request: NextRequest) {
 
   // Auto-detect default branch from GitHub if not explicitly provided
   let branch = defaultBranch;
-  if (!branch) {
-    try {
-      const octokit = getOctokit();
-      const { data } = await octokit.rest.repos.get({ owner, repo });
-      branch = data.default_branch;
-    } catch {
-      branch = "main";
-    }
+  let githubCommitCount: number | undefined;
+  let githubPrCount: number | undefined;
+  let githubCreatedAt: Date | undefined;
+
+  try {
+    const octokit = getOctokit();
+    const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+    if (!branch) branch = repoData.default_branch;
+    if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
+
+    // Fetch commit & PR counts in parallel via search API
+    const [commitSearch, prSearch] = await Promise.all([
+      octokit.rest.search.commits({ q: `repo:${owner}/${repo}`, per_page: 1 }),
+      octokit.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr`, per_page: 1 }),
+    ]);
+    githubCommitCount = commitSearch.data.total_count;
+    githubPrCount = prSearch.data.total_count;
+  } catch {
+    if (!branch) branch = "main";
   }
 
   const project = await prisma.project.upsert({
     where: { owner_repo: { owner, repo } },
-    update: { defaultBranch: branch },
+    update: {
+      defaultBranch: branch,
+      ...(githubCommitCount !== undefined && { githubCommitCount }),
+      ...(githubPrCount !== undefined && { githubPrCount }),
+      ...(githubCreatedAt !== undefined && { githubCreatedAt }),
+    },
     create: {
       owner,
       repo,
       defaultBranch: branch,
+      githubCommitCount: githubCommitCount ?? null,
+      githubPrCount: githubPrCount ?? null,
+      githubCreatedAt: githubCreatedAt ?? null,
     },
   });
 
