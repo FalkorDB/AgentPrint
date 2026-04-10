@@ -40,6 +40,17 @@ npm install
 cp .env.example .env
 # Edit .env — set GITHUB_TOKEN (see below)
 
+# 3. Start everything (Docker Postgres + migrations + app)
+./start.sh          # production mode
+./start.sh --dev    # development mode with hot-reload
+```
+
+Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
+
+<details>
+<summary>Manual steps (if not using start.sh)</summary>
+
+```bash
 # 3. Start PostgreSQL with Docker
 docker run -d \
   --name agentprint-db \
@@ -58,8 +69,7 @@ npx prisma generate
 # 6. Start development server
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
+</details>
 
 ### Environment Variables
 
