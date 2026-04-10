@@ -74,8 +74,8 @@ export async function collectProjectData(
     }
   }
 
-  // 2. Get per-file changes from git clone (for accurate line counts with exclusions)
-  progress("Cloning repo & analyzing file changes…");
+  // 2. Get per-file changes from GitHub API (for accurate line counts with exclusions)
+  progress("Fetching per-file change stats…");
   const fileChanges = await getFileChanges(
     owner,
     repo,

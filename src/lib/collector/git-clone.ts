@@ -1,8 +1,4 @@
-import simpleGit, { SimpleGit } from "simple-git";
-import * as fs from "fs";
-import * as path from "path";
-
-const CLONE_BASE = process.env.GIT_CLONE_DIR || "/tmp/agentprint-repos";
+import { getOctokit } from "../github/client";
 
 /** File patterns to exclude from line-count metrics */
 const EXCLUDED_PATTERNS = [
@@ -36,104 +32,72 @@ export interface GitFileChange {
 }
 
 /**
- * Ensures a bare clone exists and is up to date.
- * Returns the path to the bare repo.
- */
-export async function ensureClone(
-  owner: string,
-  repo: string
-): Promise<{ repoPath: string; git: SimpleGit }> {
-  const repoPath = path.join(CLONE_BASE, `${owner}--${repo}.git`);
-
-  if (!fs.existsSync(CLONE_BASE)) {
-    fs.mkdirSync(CLONE_BASE, { recursive: true });
-  }
-
-  if (fs.existsSync(repoPath)) {
-    const git = simpleGit(repoPath);
-    await git.fetch(["--all"]);
-    return { repoPath, git };
-  }
-
-  const git = simpleGit();
-  await git.clone(`https://github.com/${owner}/${repo}.git`, repoPath, [
-    "--bare",
-  ]);
-
-  return { repoPath, git: simpleGit(repoPath) };
-}
-
-/**
- * Parse git log --numstat output for per-file additions/deletions.
- * Only includes commits on the specified branch after the given date.
+ * Fetch per-file changes from the GitHub API for each commit.
+ * Replaces git clone — no system git binary needed.
  */
 export async function getFileChanges(
   owner: string,
   repo: string,
-  branch: string,
+  _branch: string,
   since?: Date,
   lastSha?: string
 ): Promise<GitFileChange[]> {
-  const { git } = await ensureClone(owner, repo);
-
-  const logArgs = [
-    "--numstat",
-    "--format=%H|%ae|%an|%aI",
-    branch,
-  ];
-
-  if (since) {
-    logArgs.push(`--since=${since.toISOString()}`);
-  }
-
-  if (lastSha) {
-    // Only get commits after the last known SHA
-    logArgs[logArgs.indexOf(branch)] = `${lastSha}..${branch}`;
-  }
-
-  const result = await git.log(logArgs);
+  const octokit = getOctokit();
   const changes: GitFileChange[] = [];
 
-  // Parse raw numstat output
-  const raw = await git.raw(["log", ...logArgs]);
-  const lines = raw.split("\n");
+  // List commits in the window
+  const commits: Array<{ sha: string; authorEmail: string; authorName: string; date: Date }> = [];
+  const iterator = octokit.paginate.iterator(octokit.rest.repos.listCommits, {
+    owner,
+    repo,
+    since: since?.toISOString(),
+    per_page: 100,
+  });
 
-  let currentSha = "";
-  let currentEmail = "";
-  let currentName = "";
-  let currentDate = new Date();
-
-  for (const line of lines) {
-    if (line.includes("|") && !line.startsWith("\t") && !line.match(/^\d/)) {
-      const parts = line.split("|");
-      if (parts.length >= 4) {
-        currentSha = parts[0];
-        currentEmail = parts[1];
-        currentName = parts[2];
-        currentDate = new Date(parts[3]);
-      }
-      continue;
+  for await (const { data } of iterator) {
+    for (const c of data) {
+      if (lastSha && c.sha === lastSha) break;
+      commits.push({
+        sha: c.sha,
+        authorEmail: c.commit.author?.email ?? "",
+        authorName: c.commit.author?.name ?? "",
+        date: new Date(c.commit.committer?.date ?? c.commit.author?.date ?? ""),
+      });
     }
+  }
 
-    // numstat line: additions\tdeletions\tfilepath
-    const numstatMatch = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/);
-    if (numstatMatch && currentSha) {
-      const additions =
-        numstatMatch[1] === "-" ? 0 : parseInt(numstatMatch[1], 10);
-      const deletions =
-        numstatMatch[2] === "-" ? 0 : parseInt(numstatMatch[2], 10);
-      const filePath = numstatMatch[3];
+  // Fetch file stats per commit (batched with concurrency limit)
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < commits.length; i += BATCH_SIZE) {
+    const batch = commits.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (commit) => {
+        try {
+          const { data } = await octokit.rest.repos.getCommit({
+            owner,
+            repo,
+            ref: commit.sha,
+          });
+          return { commit, files: data.files ?? [] };
+        } catch {
+          return { commit, files: [] };
+        }
+      })
+    );
 
-      if (!isExcludedFile(filePath)) {
-        changes.push({
-          sha: currentSha,
-          authorEmail: currentEmail,
-          authorName: currentName,
-          date: currentDate,
-          path: filePath,
-          additions,
-          deletions,
-        });
+    for (const { commit, files } of results) {
+      for (const file of files) {
+        if (!isExcludedFile(file.filename)) {
+          changes.push({
+            sha: commit.sha,
+            authorEmail: commit.authorEmail,
+            authorName: commit.authorName,
+            date: commit.date,
+            path: file.filename,
+            additions: file.additions ?? 0,
+            deletions: file.deletions ?? 0,
+          });
+        }
       }
     }
   }
