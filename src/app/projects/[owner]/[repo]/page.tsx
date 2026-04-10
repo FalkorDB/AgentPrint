@@ -95,7 +95,23 @@ export default function ProjectDetailPage() {
     const target = new Date(`${latest.month}-01`);
     target.setMonth(target.getMonth() - 12);
     const targetStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
-    return metrics.find((m) => m.month === targetStr) ?? null;
+    // Find exact match first, then closest month with data within ±2 months
+    const withData = metrics.filter((m) => m.activeDevs > 0 && m.month !== latest.month);
+    const exact = withData.find((m) => m.month === targetStr);
+    if (exact) return exact;
+    let best: MetricData | null = null;
+    let bestDist = Infinity;
+    for (const m of withData) {
+      const dist = Math.abs(
+        (new Date(`${m.month}-01`).getTime() - new Date(`${targetStr}-01`).getTime()) /
+        (30 * 24 * 60 * 60 * 1000)
+      );
+      if (dist < bestDist && dist <= 2) {
+        bestDist = dist;
+        best = m;
+      }
+    }
+    return best;
   }, [metrics, latest]);
 
   if (loading) {
