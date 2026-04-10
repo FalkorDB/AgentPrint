@@ -182,6 +182,38 @@ API tokens are managed from the dashboard (key icon in the header) or via the `/
 curl -H "Authorization: Bearer ap_abc123..." https://agentprint.falkordb.com/api/projects
 ```
 
+### MCP Server
+
+AgentPrint exposes an [MCP (Model Context Protocol)](https://modelcontextprotocol.io) server for AI agents and coding assistants. Authenticate with an API token.
+
+**Endpoint:** `https://agentprint.falkordb.com/api/mcp/mcp`
+
+**Available tools:** `list_projects`, `add_project`, `delete_project`, `get_metrics`, `get_stars`
+
+Configure in your MCP client (Claude Desktop, Cursor, VS Code, etc.):
+
+```json
+{
+  "agentprint": {
+    "url": "https://agentprint.falkordb.com/api/mcp/mcp",
+    "headers": {
+      "Authorization": "Bearer ap_your_token_here"
+    }
+  }
+}
+```
+
+For stdio-only clients, use [mcp-remote](https://www.npmjs.com/package/mcp-remote):
+
+```json
+{
+  "agentprint": {
+    "command": "npx",
+    "args": ["-y", "mcp-remote", "https://agentprint.falkordb.com/api/mcp/mcp", "--header", "Authorization:Bearer ap_your_token_here"]
+  }
+}
+```
+
 ## Architecture
 
 ```
