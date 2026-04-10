@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
 
@@ -23,11 +24,13 @@ interface ProgressEntry {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [collectingId, setCollectingId] = useState<string | null>(null);
   const [progressLog, setProgressLog] = useState<ProgressEntry[]>([]);
+  const [syncDone, setSyncDone] = useState(false);
 
   const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
@@ -60,6 +63,7 @@ export default function HomePage() {
   async function handleCollect(projectId: string) {
     setCollectingId(projectId);
     setProgressLog([]);
+    setSyncDone(false);
 
     try {
       const res = await fetch("/api/collect", {
@@ -106,6 +110,9 @@ export default function HomePage() {
       }
 
       await fetchProjects();
+      setSyncDone(true);
+      // Auto-navigate to project dashboard after a short delay
+      setTimeout(() => router.push(`/projects/${projectId}`), 1500);
     } finally {
       setCollectingId(null);
     }
@@ -135,11 +142,15 @@ export default function HomePage() {
       </section>
 
       {/* Progress panel */}
-      {collectingId && progressLog.length > 0 && (
+      {(collectingId || syncDone) && progressLog.length > 0 && (
         <section className="mb-10 bg-gray-800 rounded-xl p-5 border border-gray-700">
           <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Syncing…
+            {syncDone ? (
+              <span className="inline-block w-2 h-2 bg-blue-400 rounded-full" />
+            ) : (
+              <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            )}
+            {syncDone ? "Sync complete — redirecting to dashboard…" : "Syncing…"}
           </h3>
           <div className="max-h-48 overflow-y-auto space-y-1 font-mono text-sm">
             {progressLog.map((entry, i) => (
