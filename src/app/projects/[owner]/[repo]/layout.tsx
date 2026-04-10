@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { prisma } from "@/lib/db";
 
 interface Props {
   params: Promise<{ owner: string; repo: string }>;
@@ -7,7 +8,21 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { owner, repo } = await params;
-  const title = `${owner}/${repo} — AgentPrint`;
+
+  let scoreText = "";
+  try {
+    const project = await prisma.project.findUnique({
+      where: { owner_repo: { owner, repo } },
+      select: { impactScore: true },
+    });
+    if (project?.impactScore !== null && project?.impactScore !== undefined) {
+      scoreText = ` · Score: ${project.impactScore}`;
+    }
+  } catch {
+    // DB unavailable — omit score
+  }
+
+  const title = `${owner}/${repo}${scoreText} — AgentPrint`;
   const description = `AI agent fingerprint analysis for ${owner}/${repo}. Velocity metrics, PR health, and agent impact score.`;
 
   return {
@@ -19,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "AgentPrint",
     },
     twitter: {
-      card: "summary_large_image",
+      card: "summary",
       title,
       description,
     },
