@@ -35,7 +35,7 @@ db-rm: db-stop                             ## Remove Docker Postgres container
 	docker rm agentprint-db
 
 migrate:                                   ## Run Prisma migrations
-	npx prisma migrate dev --name init --skip-generate 2>/dev/null || npx prisma migrate deploy
+	npx prisma migrate dev
 
 generate:                                  ## Generate Prisma client
 	npx prisma generate
