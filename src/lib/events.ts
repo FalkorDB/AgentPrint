@@ -26,7 +26,8 @@ export const AI_EVENT_MARKERS: EventMarker[] = [
   { date: "2025-06", label: "Claude 4 Sonnet", color: "#F59E0B" },
   { date: "2025-08", label: "Claude Opus 4.1", color: "#F59E0B" },
   { date: "2025-09", label: "Claude Sonnet 4.5", color: "#F59E0B" },
-  { date: "2025-11", label: "GPT-5 / Gemini 2.5 Pro / Opus 4.5", color: "#3B82F6" },
+  { date: "2025-11", label: "GPT-5 / Gemini 3 / Opus 4.5", color: "#3B82F6" },
   // 2026
-  { date: "2026-02", label: "Opus 4.6 / GPT-5.3 Codex", color: "#3B82F6" },
+  { date: "2026-02", label: "Opus 4.6 / Gemini 3.1 Pro", color: "#F59E0B" },
+  { date: "2026-03", label: "GPT-5.4", color: "#3B82F6" },
 ];
