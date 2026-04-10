@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
 
@@ -30,14 +29,11 @@ export interface ProjectSyncState {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   // Per-project sync state keyed by projectId
   const [syncStates, setSyncStates] = useState<Record<string, ProjectSyncState>>({});
-  const syncStatesRef = useRef(syncStates);
-  syncStatesRef.current = syncStates;
 
   const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
@@ -138,7 +134,7 @@ export default function HomePage() {
       }));
 
       if (success && proj) {
-        setTimeout(() => router.push(`/projects/${proj.owner}/${proj.repo}`), 1500);
+        setTimeout(() => window.open(`/projects/${proj.owner}/${proj.repo}`, "_blank"), 1500);
       }
     } catch {
       setSyncStates((prev) => ({
