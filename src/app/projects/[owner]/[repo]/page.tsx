@@ -83,8 +83,13 @@ export default function ProjectDetailPage() {
     [metrics]
   );
 
-  // Summary: latest vs 12 months ago
-  const latest = metrics.length > 0 ? metrics[metrics.length - 1] : null;
+  // Summary: latest vs 12 months ago (skip months with no active devs)
+  const latest = useMemo(() => {
+    for (let i = metrics.length - 1; i >= 0; i--) {
+      if (metrics[i].activeDevs > 0) return metrics[i];
+    }
+    return null;
+  }, [metrics]);
   const prev12 = useMemo(() => {
     if (!latest || metrics.length < 2) return null;
     const target = new Date(`${latest.month}-01`);
