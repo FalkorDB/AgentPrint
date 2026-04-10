@@ -13,6 +13,8 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { EventMarker } from "@/lib/events";
+import { ChartTooltip } from "./ChartTooltip";
+import { StaggeredLabel } from "./StaggeredLabel";
 
 interface VelocityChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +36,7 @@ export function VelocityChart({ data, markers }: VelocityChartProps) {
         Lines changed per active dev (area) · PR merge rate per dev (line)
       </p>
       <ResponsiveContainer width="100%" height={350}>
-        <ComposedChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradLines" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />
@@ -58,17 +60,9 @@ export function VelocityChart({ data, markers }: VelocityChartProps) {
             tickLine={false}
             label={{ value: "PRs / Dev", angle: 90, position: "insideRight", style: { fill: "#F59E0B", fontSize: 11 } }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              borderRadius: "8px",
-              color: "#F9FAFB",
-              fontSize: 12,
-            }}
-          />
+          <Tooltip content={<ChartTooltip markers={visibleMarkers} formatValue={(v) => Math.round(v).toLocaleString()} />} />
           <Legend />
-          {visibleMarkers.map((m) => (
+          {visibleMarkers.map((m, i) => (
             <ReferenceLine
               key={m.date}
               x={m.date}
@@ -76,12 +70,7 @@ export function VelocityChart({ data, markers }: VelocityChartProps) {
               stroke={m.color || "#6B7280"}
               strokeDasharray="4 4"
               strokeOpacity={0.7}
-              label={{
-                value: m.label,
-                position: "top",
-                fill: m.color || "#6B7280",
-                fontSize: 9,
-              }}
+              label={<StaggeredLabel marker={m} index={i} />}
             />
           ))}
           <Area

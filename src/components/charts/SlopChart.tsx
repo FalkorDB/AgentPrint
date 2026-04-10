@@ -12,6 +12,8 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { EventMarker } from "@/lib/events";
+import { ChartTooltip } from "./ChartTooltip";
+import { StaggeredLabel } from "./StaggeredLabel";
 
 interface SlopChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,7 +35,7 @@ export function SlopChart({ data, markers }: SlopChartProps) {
         Rising rejection rate + first-time contributor ratio after AI model releases may indicate low-quality AI-generated PRs.
       </p>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
           <XAxis dataKey="month" stroke="#6B7280" fontSize={11} tickLine={false} />
           <YAxis
@@ -43,30 +45,16 @@ export function SlopChart({ data, markers }: SlopChartProps) {
             domain={[0, "auto"]}
             label={{ value: "%", angle: -90, position: "insideLeft", style: { fill: "#6B7280", fontSize: 11 } }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              borderRadius: "8px",
-              color: "#F9FAFB",
-              fontSize: 12,
-            }}
-            formatter={(value) => `${Number(value).toFixed(1)}%`}
-          />
+          <Tooltip content={<ChartTooltip markers={visibleMarkers} formatValue={(v) => `${v.toFixed(1)}%`} />} />
           <Legend />
-          {visibleMarkers.map((m) => (
+          {visibleMarkers.map((m, i) => (
             <ReferenceLine
               key={m.date}
               x={m.date}
               stroke={m.color || "#6B7280"}
               strokeDasharray="4 4"
               strokeOpacity={0.7}
-              label={{
-                value: m.label,
-                position: "top",
-                fill: m.color || "#6B7280",
-                fontSize: 9,
-              }}
+              label={<StaggeredLabel marker={m} index={i} />}
             />
           ))}
           <Line

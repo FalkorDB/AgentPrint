@@ -10,6 +10,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ChartTooltip } from "./ChartTooltip";
+
+const ActiveDevsTooltip = (props: Record<string, unknown>) => (
+  <ChartTooltip {...props} markers={[]} formatValue={(v) => String(Math.round(v))} />
+);
 
 interface ActiveDevsChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,15 +40,7 @@ export function ActiveDevsChart({ data }: ActiveDevsChartProps) {
             tickLine={false}
             label={{ value: "Developers", angle: -90, position: "insideLeft", style: { fill: "#6B7280", fontSize: 11 } }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1F2937",
-              border: "1px solid #374151",
-              borderRadius: "8px",
-              color: "#F9FAFB",
-              fontSize: 12,
-            }}
-          />
+          <Tooltip content={<ActiveDevsTooltip />} />
           <Legend />
           <Bar
             dataKey="committers"
