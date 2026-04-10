@@ -20,45 +20,59 @@ export async function PUT(
   let githubStars: number | undefined;
   let githubCreatedAt: Date | undefined;
 
+  // Wrap all GitHub API calls in a timeout so the endpoint always returns
   try {
-    const octokit = getOctokit();
-    const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
-    branch = repoData.default_branch;
-    githubStars = repoData.stargazers_count;
+    await Promise.race([
+      (async () => {
+        const octokit = getOctokit();
+        const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
+        branch = repoData.default_branch;
+        githubStars = repoData.stargazers_count;
 
-    try {
-      const firstPage = await octokit.rest.repos.listCommits({
-        owner, repo, sha: branch, per_page: 1,
-      });
-      const linkHeader = firstPage.headers.link || "";
-      const lastPageMatch = linkHeader.match(/[&?]page=(\d+)>;\s*rel="last"/);
-      if (lastPageMatch) {
-        const lastPage = parseInt(lastPageMatch[1], 10);
-        const { data: oldest } = await octokit.rest.repos.listCommits({
-          owner, repo, sha: branch, per_page: 1, page: lastPage,
-        });
-        if (oldest.length > 0) {
-          const date = oldest[0].commit.author?.date || oldest[0].commit.committer?.date;
-          if (date) githubCreatedAt = new Date(date);
-        }
-      } else if (firstPage.data.length > 0) {
-        const date = firstPage.data[0].commit.author?.date || firstPage.data[0].commit.committer?.date;
-        if (date) githubCreatedAt = new Date(date);
-      }
-    } catch {
-      if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
-    }
-
-    try {
-      const [commitSearch, prSearch] = await Promise.all([
-        octokit.rest.search.commits({ q: `repo:${owner}/${repo} merge:false`, per_page: 1 }),
-        octokit.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr`, per_page: 1 }),
-      ]);
-      githubCommitCount = commitSearch.data.total_count;
-      githubPrCount = prSearch.data.total_count;
-    } catch {
-      // Search API may be rate-limited separately
-    }
+        // Run oldest-commit lookup and search API calls in parallel
+        await Promise.allSettled([
+          // Oldest commit date
+          (async () => {
+            try {
+              const firstPage = await octokit.rest.repos.listCommits({
+                owner, repo, sha: branch!, per_page: 1,
+              });
+              const linkHeader = firstPage.headers.link || "";
+              const lastPageMatch = linkHeader.match(/[&?]page=(\d+)>;\s*rel="last"/);
+              if (lastPageMatch) {
+                const lastPage = parseInt(lastPageMatch[1], 10);
+                const { data: oldest } = await octokit.rest.repos.listCommits({
+                  owner, repo, sha: branch!, per_page: 1, page: lastPage,
+                });
+                if (oldest.length > 0) {
+                  const date = oldest[0].commit.author?.date || oldest[0].commit.committer?.date;
+                  if (date) githubCreatedAt = new Date(date);
+                }
+              } else if (firstPage.data.length > 0) {
+                const date = firstPage.data[0].commit.author?.date || firstPage.data[0].commit.committer?.date;
+                if (date) githubCreatedAt = new Date(date);
+              }
+            } catch {
+              if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
+            }
+          })(),
+          // Commit & PR counts via search API
+          (async () => {
+            try {
+              const [commitSearch, prSearch] = await Promise.all([
+                octokit.rest.search.commits({ q: `repo:${owner}/${repo} merge:false`, per_page: 1 }),
+                octokit.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr`, per_page: 1 }),
+              ]);
+              githubCommitCount = commitSearch.data.total_count;
+              githubPrCount = prSearch.data.total_count;
+            } catch {
+              // Search API may be rate-limited
+            }
+          })(),
+        ]);
+      })(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 15_000)),
+    ]);
   } catch {
     if (!branch) branch = "main";
   }
