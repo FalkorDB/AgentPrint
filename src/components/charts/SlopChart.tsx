@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -22,15 +23,27 @@ interface SlopChartProps {
 }
 
 export function SlopChart({ data, markers }: SlopChartProps) {
-  const visibleMarkers = markers.filter((m) =>
-    data.some((d) => d.month === m.date)
-  );
+  const [showMarkers, setShowMarkers] = useState(true);
+  const visibleMarkers = showMarkers
+    ? markers.filter((m) => data.some((d) => d.month === m.date))
+    : [];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-        Slop Signal
-      </h3>
+      <div className="flex items-start justify-between mb-1">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Slop Signal
+        </h3>
+        <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showMarkers}
+            onChange={(e) => setShowMarkers(e.target.checked)}
+            className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 h-3.5 w-3.5"
+          />
+          AI models
+        </label>
+      </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         Rising rejection rate + first-time contributor ratio after AI model releases may indicate low-quality AI-generated PRs.
       </p>

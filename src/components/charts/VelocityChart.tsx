@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ComposedChart,
   Area,
@@ -23,20 +24,32 @@ interface VelocityChartProps {
 }
 
 export function VelocityChart({ data, markers }: VelocityChartProps) {
-  const visibleMarkers = markers.filter((m) =>
-    data.some((d) => d.month === m.date)
-  );
+  const [showMarkers, setShowMarkers] = useState(true);
+  const visibleMarkers = showMarkers
+    ? markers.filter((m) => data.some((d) => d.month === m.date))
+    : [];
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-        Development Velocity
-      </h3>
+      <div className="flex items-start justify-between mb-1">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Development Velocity
+        </h3>
+        <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showMarkers}
+            onChange={(e) => setShowMarkers(e.target.checked)}
+            className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 h-3.5 w-3.5"
+          />
+          AI models
+        </label>
+      </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         Lines changed per active dev (area) · PR merge rate per dev (line)
       </p>
       <ResponsiveContainer width="100%" height={350}>
-        <ComposedChart data={data} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
+        <ComposedChart data={data} margin={{ top: 55, right: 30, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradLines" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3} />

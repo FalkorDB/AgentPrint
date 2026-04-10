@@ -15,7 +15,7 @@ interface StaggeredLabelProps {
 export function StaggeredLabel({ marker, index, viewBox }: StaggeredLabelProps) {
   if (!viewBox) return null;
   const row = index % 3;
-  const yOffset = row === 0 ? -36 : row === 1 ? -22 : -8;
+  const yOffset = row === 0 ? -28 : row === 1 ? -16 : -4;
 
   return (
     <text

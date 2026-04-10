@@ -91,18 +91,15 @@ export function AgentScoreBadge({ score, confidence, size = "lg" }: AgentScoreBa
   return (
     <div
       ref={ref}
-      className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-xl ${bg} ring-1 ${ring} cursor-help`}
+      className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${bg} ring-1 ${ring} cursor-help`}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <span className="text-lg">🤖</span>
-      <div className="flex flex-col leading-tight">
-        <span className={`text-lg font-bold ${text}`}>{score}</span>
-        <span className={`text-[10px] uppercase tracking-wider ${text} opacity-80`}>
-          {label}
-          {confidence === "low" && " · low conf"}
-        </span>
-      </div>
+      <span className="text-base">🤖</span>
+      <span className={`text-base font-bold ${text}`}>{score}</span>
+      <span className={`text-[10px] uppercase tracking-wider ${text} opacity-80`}>
+        {label}
+      </span>
       {tooltip}
     </div>
   );
