@@ -9,10 +9,10 @@ interface AgentScoreBadgeProps {
 }
 
 function getScoreColor(score: number): { bg: string; text: string; ring: string; label: string } {
-  if (score >= 75) return { bg: "bg-red-500/15", text: "text-red-400", ring: "ring-red-500/30", label: "Very High" };
-  if (score >= 50) return { bg: "bg-orange-500/15", text: "text-orange-400", ring: "ring-orange-500/30", label: "High" };
+  if (score >= 75) return { bg: "bg-green-500/15", text: "text-green-400", ring: "ring-green-500/30", label: "Very High" };
+  if (score >= 50) return { bg: "bg-emerald-500/15", text: "text-emerald-400", ring: "ring-emerald-500/30", label: "High" };
   if (score >= 25) return { bg: "bg-yellow-500/15", text: "text-yellow-400", ring: "ring-yellow-500/30", label: "Moderate" };
-  return { bg: "bg-green-500/15", text: "text-green-400", ring: "ring-green-500/30", label: "Low" };
+  return { bg: "bg-red-500/15", text: "text-red-400", ring: "ring-red-500/30", label: "Low" };
 }
 
 const SCORE_BREAKDOWN = [
@@ -30,7 +30,7 @@ function ScoreTooltip({ score, confidence, label }: { score: number; confidence?
         <span className="font-bold text-white">{score}/100</span>
       </div>
       <p className="text-gray-400 leading-snug">
-        Measures how much AI coding agents appear to influence this project. Compares the last 6 months against the 6–18 month baseline.
+        Measures how much AI coding agents have boosted this project&apos;s velocity. Higher score = greater positive impact. Compares the last 6 months against the 6–18 month baseline.
       </p>
       <div className="space-y-1.5 pt-1">
         {SCORE_BREAKDOWN.map((item) => (
