@@ -130,6 +130,27 @@ docker start agentprint-db
 docker rm -f agentprint-db
 ```
 
+### Deploying to Railway
+
+1. Create a new project on [Railway](https://railway.com)
+2. Add a **PostgreSQL** service — Railway provisions a database and sets `DATABASE_URL` automatically
+3. Connect your GitHub repo (or use `railway up` from the CLI)
+4. Set the following environment variables in the Railway service settings:
+
+   | Variable | Value |
+   |----------|-------|
+   | `DATABASE_URL` | Provided by Railway's Postgres plugin (auto-set if you link the DB) |
+   | `GITHUB_TOKEN` | Your GitHub PAT |
+   | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+   | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+   | `AUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
+   | `NEXTAUTH_URL` | Your Railway app URL, e.g. `https://agentprint.up.railway.app` |
+
+5. Railway will run `npm run build` which automatically runs `prisma generate`, `prisma migrate deploy`, and `next build`
+6. The app starts with `npm start` (`next start`) on the default port
+
+> **Note:** If Railway provides the database URL under a different variable name (e.g. `DATABASE_PRIVATE_URL`), add a reference variable: `DATABASE_URL` → `${{Postgres.DATABASE_PRIVATE_URL}}`.
+
 ## API
 
 | Method | Endpoint | Description |
