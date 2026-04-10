@@ -10,12 +10,12 @@ interface StaggeredLabelProps {
 }
 
 /**
- * Renders event marker labels at alternating heights so they don't overlap.
- * Even-indexed labels sit higher, odd ones sit lower.
+ * Renders event marker labels at staggered heights (3 rows) so they don't overlap.
  */
 export function StaggeredLabel({ marker, index, viewBox }: StaggeredLabelProps) {
   if (!viewBox) return null;
-  const yOffset = index % 2 === 0 ? -22 : -8;
+  const row = index % 3;
+  const yOffset = row === 0 ? -36 : row === 1 ? -22 : -8;
 
   return (
     <text

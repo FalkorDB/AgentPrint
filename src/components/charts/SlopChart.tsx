@@ -35,7 +35,7 @@ export function SlopChart({ data, markers }: SlopChartProps) {
         Rising rejection rate + first-time contributor ratio after AI model releases may indicate low-quality AI-generated PRs.
       </p>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 40, right: 30, left: 0, bottom: 0 }}>
+        <LineChart data={data} margin={{ top: 55, right: 30, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
           <XAxis dataKey="month" stroke="#6B7280" fontSize={11} tickLine={false} />
           <YAxis
