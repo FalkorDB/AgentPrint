@@ -14,6 +14,7 @@ interface Project {
   impactConfidence?: string | null;
   githubCommitCount?: number | null;
   githubPrCount?: number | null;
+  githubStars?: number | null;
   githubCreatedAt?: string | null;
   syncState?: { lastSyncAt: string | null } | null;
   _count: {

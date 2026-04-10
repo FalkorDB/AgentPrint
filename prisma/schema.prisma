@@ -19,6 +19,7 @@ model Project {
   // Cached GitHub stats (populated on add, before first sync)
   githubCommitCount Int?
   githubPrCount     Int?
+  githubStars       Int?
   githubCreatedAt   DateTime?
 
   // Agent Impact Score

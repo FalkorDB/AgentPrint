@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
   let branch = defaultBranch;
   let githubCommitCount: number | undefined;
   let githubPrCount: number | undefined;
+  let githubStars: number | undefined;
   let githubCreatedAt: Date | undefined;
 
   try {
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
     const { data: repoData } = await octokit.rest.repos.get({ owner, repo });
     if (!branch) branch = repoData.default_branch;
     if (repoData.created_at) githubCreatedAt = new Date(repoData.created_at);
+    githubStars = repoData.stargazers_count;
 
     // Fetch commit & PR counts in parallel via search API
     const [commitSearch, prSearch] = await Promise.all([
@@ -66,6 +68,7 @@ export async function POST(request: NextRequest) {
       defaultBranch: branch,
       ...(githubCommitCount !== undefined && { githubCommitCount }),
       ...(githubPrCount !== undefined && { githubPrCount }),
+      ...(githubStars !== undefined && { githubStars }),
       ...(githubCreatedAt !== undefined && { githubCreatedAt }),
     },
     create: {
@@ -74,6 +77,7 @@ export async function POST(request: NextRequest) {
       defaultBranch: branch,
       githubCommitCount: githubCommitCount ?? null,
       githubPrCount: githubPrCount ?? null,
+      githubStars: githubStars ?? null,
       githubCreatedAt: githubCreatedAt ?? null,
     },
   });

@@ -20,6 +20,7 @@ interface ProjectListItem {
   impactConfidence?: string | null;
   githubCommitCount?: number | null;
   githubPrCount?: number | null;
+  githubStars?: number | null;
   githubCreatedAt?: string | null;
   syncState?: {
     lastSyncAt: string | null;
@@ -131,6 +132,9 @@ export function ProjectList({
                   </span>
                 )}
                 <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {project.githubStars != null && (
+                    <span>⭐ {project.githubStars.toLocaleString()}</span>
+                  )}
                   <span>{(project._count.commits || project.githubCommitCount || 0).toLocaleString()} commits</span>
                   <span>{(project._count.pullRequests || project.githubPrCount || 0).toLocaleString()} PRs</span>
                   <span>{project._count.monthlyMetrics || monthsActive(project.githubCreatedAt)} months</span>
