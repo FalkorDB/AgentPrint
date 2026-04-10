@@ -10,7 +10,7 @@ export default function LoginPage() {
           🚀 AgentPrint
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
-          Detect the fingerprint AI coding agents leave on open-source projects
+          Detect the fingerprint AI coding agents leave on open-source projects velocity
         </p>
         <button
           onClick={() => signIn("google", { callbackUrl: "/" })}

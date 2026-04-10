@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
-  description: "Detect the fingerprint AI coding agents leave on open-source projects",
+  description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
 };
 
 export default function RootLayout({
