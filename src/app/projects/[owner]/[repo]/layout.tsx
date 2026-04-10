@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "AgentPrint",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
     },
