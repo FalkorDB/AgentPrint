@@ -16,6 +16,12 @@ model Project {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
+  // Agent Impact Score
+  impactScore           Float?
+  impactConfidence      String?  // "low" | "medium" | "high"
+  impactScoreVersion    Int      @default(1)
+  impactScoreComputedAt DateTime?
+
   commits        Commit[]
   pullRequests   PullRequest[]
   monthlyMetrics MonthlyMetric[]

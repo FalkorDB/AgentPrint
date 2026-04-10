@@ -10,6 +10,8 @@ interface Project {
   owner: string;
   repo: string;
   defaultBranch: string;
+  impactScore?: number | null;
+  impactConfidence?: string | null;
   syncState?: { lastSyncAt: string | null } | null;
   _count: {
     commits: number;

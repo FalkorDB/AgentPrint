@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { collectProjectData } from "@/lib/collector";
 import { computeAndStoreMetrics } from "@/lib/metrics/compute";
+import { computeAndStoreScore } from "@/lib/metrics/score";
 import { auth } from "@/auth";
 
 /** In-flight sync jobs keyed by projectId so clients can reconnect */
@@ -48,9 +49,14 @@ export async function POST(request: NextRequest) {
       const result = await collectProjectData(projectId, log);
       log("Computing metrics…");
       const metrics = await computeAndStoreMetrics(projectId);
+      log("Computing agent impact score…");
+      const scoreResult = await computeAndStoreScore(projectId);
+      const scoreMsg = scoreResult
+        ? `Agent Impact: ${scoreResult.score}/100 (${scoreResult.confidence} confidence)`
+        : "Agent Impact: insufficient data";
       log(
         "Done",
-        `${result.commitsCollected} commits, ${result.prsCollected} PRs, ${metrics.length} months`
+        `${result.commitsCollected} commits, ${result.prsCollected} PRs, ${metrics.length} months · ${scoreMsg}`
       );
     } catch (error) {
       job!.error =

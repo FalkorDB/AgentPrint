@@ -9,6 +9,7 @@ import { SlopChart } from "@/components/charts/SlopChart";
 import { PRHealthChart } from "@/components/charts/PRHealthChart";
 import { ActiveDevsChart } from "@/components/charts/ActiveDevsChart";
 import { DeltaCard } from "@/components/dashboard/DeltaCard";
+import { AgentScoreBadge } from "@/components/dashboard/AgentScoreBadge";
 import { AI_EVENT_MARKERS } from "@/lib/events";
 
 interface MetricData {
@@ -26,6 +27,8 @@ interface MetricData {
 interface ProjectInfo {
   owner: string;
   repo: string;
+  impactScore: number | null;
+  impactConfidence: string | null;
 }
 
 const RANGE_OPTIONS = [
@@ -136,6 +139,9 @@ export default function ProjectDetailPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {project?.owner}/{project?.repo}
           </h1>
+          {project?.impactScore !== null && project?.impactScore !== undefined && (
+            <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} />
+          )}
         </div>
 
         <div className="flex items-center gap-3">

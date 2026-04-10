@@ -30,7 +30,12 @@ export async function GET(request: NextRequest) {
 
   const project = await prisma.project.findUnique({
     where: { id: resolvedId },
-    select: { owner: true, repo: true },
+    select: {
+      owner: true,
+      repo: true,
+      impactScore: true,
+      impactConfidence: true,
+    },
   });
 
   return NextResponse.json({

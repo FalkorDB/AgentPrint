@@ -3,11 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { ProjectSyncState, ProgressEntry } from "@/app/dashboard";
+import { AgentScoreBadge } from "./AgentScoreBadge";
 
 interface ProjectListItem {
   id: string;
   owner: string;
   repo: string;
+  impactScore?: number | null;
+  impactConfidence?: string | null;
   syncState?: {
     lastSyncAt: string | null;
   } | null;
@@ -112,6 +115,11 @@ export function ProjectList({
                 >
                   {project.owner}/{project.repo}
                 </Link>
+                {project.impactScore !== null && project.impactScore !== undefined && (
+                  <span className="ml-2 align-middle">
+                    <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} size="sm" />
+                  </span>
+                )}
                 <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>{project._count.commits} commits</span>
                   <span>{project._count.pullRequests} PRs</span>
