@@ -1,6 +1,6 @@
 # AgentPrint — GitHub Project Velocity Tracker
 
-Measure the velocity of open-source projects on GitHub by computing monthly metrics normalized per active developer.
+Detect the fingerprint AI coding agents leave on open-source projects by computing monthly metrics normalized per active developer.
 
 ## Metrics
 

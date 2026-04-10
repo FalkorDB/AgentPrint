@@ -208,7 +208,7 @@ export default function HomePage() {
           🚀 AgentPrint
         </h1>
         <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          Measure the velocity of open-source projects on GitHub
+          Detect the fingerprint AI coding agents leave on open-source projects
         </p>
       </header>
 
