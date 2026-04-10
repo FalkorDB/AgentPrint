@@ -129,7 +129,7 @@ export default function ProjectDetailPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-2xl text-gray-400 hover:text-gray-200 transition-colors"
           >
             ←
           </Link>
