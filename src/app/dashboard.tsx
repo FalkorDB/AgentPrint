@@ -86,7 +86,13 @@ export default function HomePage() {
               try {
                 const data = JSON.parse(line.slice(6));
                 if (data.step) {
-                  setProgressLog((prev) => [...prev, { step: data.step, detail: data.detail }]);
+                  setProgressLog((prev) => {
+                    // Same step name → update in place (e.g. "Fetching reviews… 6/100 → 7/100")
+                    if (prev.length > 0 && prev[prev.length - 1].step === data.step) {
+                      return [...prev.slice(0, -1), { step: data.step, detail: data.detail }];
+                    }
+                    return [...prev, { step: data.step, detail: data.detail }];
+                  });
                 }
                 if (data.error) {
                   setProgressLog((prev) => [...prev, { step: "❌ Error", detail: data.error }]);

@@ -105,7 +105,11 @@ export async function collectProjectData(
     changesBySha.set(fc.sha, existing);
   }
 
+  const totalCommits = changesBySha.size;
+  let commitIdx = 0;
   for (const [sha, files] of changesBySha) {
+    commitIdx++;
+    progress("Storing commits & file stats…", `${commitIdx}/${totalCommits}`);
     const apiCommit = apiCommits.find((c) => c.sha === sha);
     const authorLogin = shaToLogin.get(sha) ?? null;
 
@@ -151,7 +155,9 @@ export async function collectProjectData(
   // 5. Persist PRs
   progress("Storing pull requests…");
   let prsCollected = 0;
-  for (const pr of prs) {
+  for (let pi = 0; pi < prs.length; pi++) {
+    const pr = prs[pi];
+    progress("Storing pull requests…", `${pi + 1}/${prs.length}`);
     try {
       await prisma.pullRequest.upsert({
         where: {
