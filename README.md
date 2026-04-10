@@ -71,6 +71,24 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 | `GITHUB_APP_PRIVATE_KEY` | No | GitHub App private key |
 | `GIT_CLONE_DIR` | No | Directory for bare repo caches (default: `/tmp/agentprint-repos`) |
 
+### Creating a GitHub Personal Access Token
+
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens?type=beta) (fine-grained tokens recommended)
+2. Click **Generate new token** → **Fine-grained token**
+3. Give it a name (e.g. `agentprint`)
+4. Set expiration as needed
+5. Under **Repository access**, choose **Public Repositories (read-only)** — this is sufficient for tracking open-source projects
+6. Under **Permissions → Repository permissions**, ensure:
+   - **Contents**: Read-only (for commit data)
+   - **Pull requests**: Read-only (for PR and review data)
+   - **Metadata**: Read-only (granted by default)
+7. Click **Generate token** and copy it into your `.env`:
+   ```
+   GITHUB_TOKEN="github_pat_xxxxxxxxxxxx"
+   ```
+
+> **Classic tokens** also work: go to [github.com/settings/tokens](https://github.com/settings/tokens) → Generate new token (classic) → select the `repo` scope (or just `public_repo` for open-source only).
+
 ### Docker Commands
 
 ```bash
