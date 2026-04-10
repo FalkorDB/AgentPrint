@@ -1,4 +1,4 @@
-# AgentPrint — GitHub Project Velocity Tracker
+# AgentPrint — Detect the Fingerprint AI Agents Leave on Code
 
 Detect the fingerprint AI coding agents leave on open-source projects by computing monthly metrics normalized per active developer.
 
