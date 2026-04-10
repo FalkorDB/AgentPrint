@@ -16,9 +16,22 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
   description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
+  metadataBase: new URL("https://agentprint.falkordb.com"),
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
+  },
+  openGraph: {
+    title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
+    description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
+    siteName: "AgentPrint",
+    images: [{ url: "/logo.png", width: 1024, height: 1024 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
+    description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
+    images: ["/logo.png"],
   },
 };
 

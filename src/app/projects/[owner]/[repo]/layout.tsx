@@ -32,11 +32,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       siteName: "AgentPrint",
+      images: [{ url: "/logo.png", width: 1024, height: 1024 }],
     },
     twitter: {
       card: "summary",
       title,
       description,
+      images: ["/logo.png"],
     },
   };
 }
