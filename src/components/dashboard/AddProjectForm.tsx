@@ -3,13 +3,12 @@
 import { useState } from "react";
 
 interface AddProjectFormProps {
-  onAdd: (project: { owner: string; repo: string; defaultBranch: string }) => void;
+  onAdd: (project: { owner: string; repo: string }) => void;
   loading?: boolean;
 }
 
 export function AddProjectForm({ onAdd, loading }: AddProjectFormProps) {
   const [repoUrl, setRepoUrl] = useState("");
-  const [defaultBranch, setDefaultBranch] = useState("main");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +31,7 @@ export function AddProjectForm({ onAdd, loading }: AddProjectFormProps) {
 
     if (!owner || !repo) return;
 
-    onAdd({ owner, repo, defaultBranch });
+    onAdd({ owner, repo });
     setRepoUrl("");
   }
 
@@ -51,22 +50,6 @@ export function AddProjectForm({ onAdd, loading }: AddProjectFormProps) {
           value={repoUrl}
           onChange={(e) => setRepoUrl(e.target.value)}
           placeholder="owner/repo or https://github.com/owner/repo"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          disabled={loading}
-        />
-      </div>
-      <div className="w-32">
-        <label
-          htmlFor="branch"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Branch
-        </label>
-        <input
-          id="branch"
-          type="text"
-          value={defaultBranch}
-          onChange={(e) => setDefaultBranch(e.target.value)}
           className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={loading}
         />

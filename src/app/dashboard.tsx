@@ -37,7 +37,6 @@ export default function HomePage() {
   async function handleAdd(proj: {
     owner: string;
     repo: string;
-    defaultBranch: string;
   }) {
     setAdding(true);
     try {
