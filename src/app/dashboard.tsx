@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
 
@@ -29,6 +30,7 @@ export interface ProjectSyncState {
 }
 
 export default function HomePage() {
+  const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -203,13 +205,36 @@ export default function HomePage() {
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
-      <header className="mb-10">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-          🚀 AgentPrint
-        </h1>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          Detect the fingerprint AI coding agents leave on open-source projects
-        </p>
+      <header className="mb-10 flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+            🚀 AgentPrint
+          </h1>
+          <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
+            Detect the fingerprint AI coding agents leave on open-source projects
+          </p>
+        </div>
+        {session?.user && (
+          <div className="flex items-center gap-3">
+            {session.user.image && (
+              <img
+                src={session.user.image}
+                alt=""
+                className="h-8 w-8 rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            )}
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {session.user.name ?? session.user.email}
+            </span>
+            <button
+              onClick={() => signOut()}
+              className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </header>
 
       <section className="mb-10">

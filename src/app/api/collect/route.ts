@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { collectProjectData } from "@/lib/collector";
 import { computeAndStoreMetrics } from "@/lib/metrics/compute";
+import { auth } from "@/auth";
 
 /** In-flight sync jobs keyed by projectId so clients can reconnect */
 const activeJobs = new Map<
@@ -9,6 +10,14 @@ const activeJobs = new Map<
 >();
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const body = await request.json();
   const { projectId } = body;
 
