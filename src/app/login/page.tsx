@@ -1,8 +1,12 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
   return (
     <main className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
@@ -21,6 +25,11 @@ export default function LoginPage() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
           Detect the fingerprint AI coding agents leave on open-source projects velocity
         </p>
+        {error === "AccessDenied" && (
+          <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-300">
+            Access denied. Your account is not authorized to use this application.
+          </div>
+        )}
         <button
           onClick={() => signIn("google", { callbackUrl: "/" })}
           className="w-full flex items-center justify-center gap-3 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
