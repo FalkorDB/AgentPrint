@@ -82,7 +82,8 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
               fontSize: "12px",
             }}
             labelStyle={{ color: "#9CA3AF" }}
-            formatter={(value: number | string) => [Number(value).toLocaleString(), "Stars"]}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            formatter={(value: any) => [Number(value).toLocaleString(), "Stars"]}
           />
           <Area
             type="monotone"
