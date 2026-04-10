@@ -8,6 +8,7 @@ import { RawVolumeChart } from "@/components/charts/RawVolumeChart";
 import { SlopChart } from "@/components/charts/SlopChart";
 import { PRHealthChart } from "@/components/charts/PRHealthChart";
 import { ActiveDevsChart } from "@/components/charts/ActiveDevsChart";
+import { StarHistoryChart } from "@/components/charts/StarHistoryChart";
 import { DeltaCard } from "@/components/dashboard/DeltaCard";
 import { AgentScoreBadge } from "@/components/dashboard/AgentScoreBadge";
 import { AI_EVENT_MARKERS } from "@/lib/events";
@@ -231,6 +232,9 @@ export default function ProjectDetailPage() {
 
           {/* Active Developers — stacked bar */}
           <ActiveDevsChart data={chartData} />
+
+          {/* Star History */}
+          <StarHistoryChart owner={owner} repo={repo} />
         </div>
       )}
     </main>
