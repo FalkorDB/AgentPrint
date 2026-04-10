@@ -5,11 +5,17 @@ import Link from "next/link";
 import type { ProjectSyncState, ProgressEntry } from "@/app/dashboard";
 import { AgentScoreBadge } from "./AgentScoreBadge";
 
-function monthsActive(createdAt?: string | null): number {
-  if (!createdAt) return 0;
-  const created = new Date(createdAt);
-  const now = new Date();
-  return (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+function formatAge(createdAt?: string | null, metricMonths?: number): string {
+  const months = metricMonths || (createdAt ? (() => {
+    const created = new Date(createdAt);
+    const now = new Date();
+    return (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth());
+  })() : 0);
+  if (months >= 12) {
+    const years = (months / 12).toFixed(1).replace(/\.0$/, "");
+    return `${years} yr${years === "1" ? "" : "s"}`;
+  }
+  return `${months} mo`;
 }
 
 interface ProjectListItem {
@@ -137,7 +143,7 @@ export function ProjectList({
                   )}
                   <span>{(project._count.commits || project.githubCommitCount || 0).toLocaleString()} commits</span>
                   <span>{(project._count.pullRequests || project.githubPrCount || 0).toLocaleString()} PRs</span>
-                  <span>{project._count.monthlyMetrics || monthsActive(project.githubCreatedAt)} months</span>
+                  <span>{formatAge(project.githubCreatedAt, project._count.monthlyMetrics)}</span>
                   {project.syncState?.lastSyncAt && (
                     <span>
                       Last sync:{" "}
