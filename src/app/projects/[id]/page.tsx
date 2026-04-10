@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { MetricChart } from "@/components/charts/MetricChart";
-import { MetricCard } from "@/components/dashboard/MetricCard";
+import { VelocityChart } from "@/components/charts/VelocityChart";
+import { SlopChart } from "@/components/charts/SlopChart";
+import { PRHealthChart } from "@/components/charts/PRHealthChart";
+import { ActiveDevsChart } from "@/components/charts/ActiveDevsChart";
+import { DeltaCard } from "@/components/dashboard/DeltaCard";
+import { AI_EVENT_MARKERS } from "@/lib/events";
 
 interface MetricData {
   month: string;
@@ -23,19 +27,27 @@ interface ProjectInfo {
   repo: string;
 }
 
+const RANGE_OPTIONS = [
+  { label: "12 mo", months: 12 },
+  { label: "24 mo", months: 24 },
+  { label: "36 mo", months: 36 },
+  { label: "All", months: 0 },
+];
+
 export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<ProjectInfo | null>(null);
-  const [metrics, setMetrics] = useState<MetricData[]>([]);
+  const [allMetrics, setAllMetrics] = useState<MetricData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rangeMonths, setRangeMonths] = useState(24);
 
   const fetchMetrics = useCallback(async () => {
     const res = await fetch(`/api/metrics?project_id=${projectId}`);
     const data = await res.json();
     setProject(data.project);
-    setMetrics(data.metrics);
+    setAllMetrics(data.metrics);
     setLoading(false);
   }, [projectId]);
 
@@ -43,173 +55,137 @@ export default function ProjectDetailPage() {
     fetchMetrics();
   }, [fetchMetrics]);
 
+  // Filter metrics by date range
+  const metrics = useMemo(() => {
+    if (rangeMonths === 0 || allMetrics.length === 0) return allMetrics;
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - rangeMonths);
+    const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, "0")}`;
+    return allMetrics.filter((m) => m.month >= cutoffStr);
+  }, [allMetrics, rangeMonths]);
+
+  // Prepare chart data
+  const chartData = useMemo(
+    () =>
+      metrics.map((m) => ({
+        ...m,
+        rejectionPct: m.prRejectionRate !== null ? m.prRejectionRate * 100 : null,
+        firstTimePct: m.firstTimeContribRatio !== null ? m.firstTimeContribRatio * 100 : null,
+        committers: m.activeCodeContributors,
+        reviewersOnly: m.activeDevs - m.activeCodeContributors,
+      })),
+    [metrics]
+  );
+
+  // Summary: latest vs 12 months ago
+  const latest = metrics.length > 0 ? metrics[metrics.length - 1] : null;
+  const prev12 = useMemo(() => {
+    if (!latest || metrics.length < 2) return null;
+    const target = new Date(`${latest.month}-01`);
+    target.setMonth(target.getMonth() - 12);
+    const targetStr = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, "0")}`;
+    return metrics.find((m) => m.month === targetStr) ?? null;
+  }, [metrics, latest]);
+
   if (loading) {
     return (
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <p className="text-gray-500">Loading metrics...</p>
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <p className="text-gray-500">Loading metrics…</p>
       </main>
     );
   }
 
-  const latest = metrics.length > 0 ? metrics[metrics.length - 1] : null;
-
   return (
-    <main className="max-w-6xl mx-auto px-6 py-10">
-      <Link
-        href="/"
-        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
-      >
-        ← Back to Dashboard
-      </Link>
+    <main className="max-w-7xl mx-auto px-6 py-8">
+      {/* Header bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/"
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            ←
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {project?.owner}/{project?.repo}
+          </h1>
+        </div>
 
-      <header className="mt-4 mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {project?.owner}/{project?.repo}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          {metrics.length} months of data
-        </p>
-      </header>
-
-      {/* Summary cards for latest month */}
-      {latest && (
-        <section className="mb-10">
-          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">
-            Latest Month: {latest.month}
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Active Developers"
-              value={latest.activeDevs}
-              subtitle={`${latest.activeCodeContributors} code contributors`}
-            />
-            <MetricCard
-              title="Lines / Dev"
-              value={latest.linesChangedPerDev}
-              unit="lines"
-            />
-            <MetricCard
-              title="PR Merge Rate / Dev"
-              value={latest.prMergeRatePerDev}
-              unit="PRs"
-            />
-            <MetricCard
-              title="PR Rejection Rate"
-              value={
-                latest.prRejectionRate !== null
-                  ? (latest.prRejectionRate * 100).toFixed(1)
-                  : null
-              }
-              unit="%"
-            />
-            <MetricCard
-              title="First-Time Contributors"
-              value={
-                latest.firstTimeContribRatio !== null
-                  ? (latest.firstTimeContribRatio * 100).toFixed(1)
-                  : null
-              }
-              unit="%"
-            />
-            <MetricCard
-              title="Median Time to Merge"
-              value={latest.medianTtmHours}
-              unit="hours"
-            />
-            <MetricCard
-              title="Median Time to Close"
-              value={latest.medianTtcHours}
-              unit="hours"
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Charts */}
-      {metrics.length > 0 && (
-        <section className="grid gap-6">
-          <MetricChart
-            title="Active Developers Over Time"
-            data={metrics}
-            dataKeys={[
-              { key: "activeDevs", label: "All Active (incl. reviewers)", color: "#3B82F6" },
-              { key: "activeCodeContributors", label: "Code Contributors", color: "#10B981" },
-            ]}
-            yAxisLabel="Developers"
-          />
-
-          <MetricChart
-            title="Lines Changed per Active Developer"
-            data={metrics}
-            dataKeys={[
-              { key: "linesChangedPerDev", label: "Lines / Dev", color: "#8B5CF6" },
-            ]}
-            yAxisLabel="Lines"
-          />
-
-          <MetricChart
-            title="PR Merge Rate per Active Developer"
-            data={metrics}
-            dataKeys={[
-              { key: "prMergeRatePerDev", label: "Merged PRs / Dev", color: "#F59E0B" },
-            ]}
-            yAxisLabel="PRs"
-          />
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <MetricChart
-              title="PR Rejection Rate"
-              data={metrics.map((m) => ({
-                ...m,
-                prRejectionPct: m.prRejectionRate !== null ? m.prRejectionRate * 100 : null,
-              }))}
-              dataKeys={[
-                { key: "prRejectionPct", label: "Rejection %", color: "#EF4444" },
-              ]}
-              yAxisLabel="%"
-            />
-
-            <MetricChart
-              title="First-Time Contributor Ratio"
-              data={metrics.map((m) => ({
-                ...m,
-                firstTimePct: m.firstTimeContribRatio !== null ? m.firstTimeContribRatio * 100 : null,
-              }))}
-              dataKeys={[
-                { key: "firstTimePct", label: "First-Time %", color: "#06B6D4" },
-              ]}
-              yAxisLabel="%"
-            />
+        <div className="flex items-center gap-3">
+          {/* Date range selector */}
+          <div className="flex rounded-lg border border-gray-600 overflow-hidden">
+            {RANGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.months}
+                onClick={() => setRangeMonths(opt.months)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  rangeMonths === opt.months
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-800 text-gray-400 hover:text-white"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <MetricChart
-              title="Median Time to Merge"
-              data={metrics}
-              dataKeys={[
-                { key: "medianTtmHours", label: "Hours to Merge", color: "#10B981" },
-              ]}
-              yAxisLabel="Hours"
-            />
+          <button
+            onClick={fetchMetrics}
+            className="px-4 py-1.5 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+      </div>
 
-            <MetricChart
-              title="Median Time to Close (Rejected)"
-              data={metrics}
-              dataKeys={[
-                { key: "medianTtcHours", label: "Hours to Close", color: "#EF4444" },
-              ]}
-              yAxisLabel="Hours"
-            />
-          </div>
-        </section>
-      )}
-
-      {metrics.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+      {metrics.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
           <p className="text-lg">No metrics computed yet</p>
           <p className="text-sm mt-1">
             Go back and click &quot;Sync &amp; Compute&quot; to collect data
           </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {/* Summary strip — 4 delta cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <DeltaCard
+              title="Lines Changed / Dev"
+              current={latest?.linesChangedPerDev ?? null}
+              previous={prev12?.linesChangedPerDev ?? null}
+              unit="lines"
+            />
+            <DeltaCard
+              title="PR Merge Rate / Dev"
+              current={latest?.prMergeRatePerDev ?? null}
+              previous={prev12?.prMergeRatePerDev ?? null}
+              format="rate"
+            />
+            <DeltaCard
+              title="PR Rejection Rate"
+              current={latest?.prRejectionRate ?? null}
+              previous={prev12?.prRejectionRate ?? null}
+              format="percent"
+            />
+            <DeltaCard
+              title="First-Time Contributors"
+              current={latest?.firstTimeContribRatio ?? null}
+              previous={prev12?.firstTimeContribRatio ?? null}
+              format="percent"
+            />
+          </div>
+
+          {/* Development Velocity — area + line, dual Y-axis */}
+          <VelocityChart data={chartData} markers={AI_EVENT_MARKERS} />
+
+          {/* Slop Signal — rejection rate + first-time contributor */}
+          <SlopChart data={chartData} markers={AI_EVENT_MARKERS} />
+
+          {/* PR Health — TTM + TTC */}
+          <PRHealthChart data={chartData} markers={AI_EVENT_MARKERS} />
+
+          {/* Active Developers — stacked bar */}
+          <ActiveDevsChart data={chartData} />
         </div>
       )}
     </main>
