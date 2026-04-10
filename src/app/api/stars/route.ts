@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchStarHistory } from "@/lib/github/stars";
+import { auth } from "@/auth";
 
 /**
  * GET /api/stars?owner=X&repo=Y
@@ -9,6 +10,11 @@ import { fetchStarHistory } from "@/lib/github/stars";
  * and persists the results for next time.
  */
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const owner = searchParams.get("owner");
   const repo = searchParams.get("repo");
@@ -59,7 +65,7 @@ export async function GET(request: NextRequest) {
     const history = liveHistory.map((p) => ({ date: p.month, stars: p.cumulativeStars }));
     return NextResponse.json({ history, totalStars });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.error("Star history fetch failed:", err);
+    return NextResponse.json({ error: "Failed to fetch star history" }, { status: 500 });
   }
 }

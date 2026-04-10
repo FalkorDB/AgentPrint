@@ -74,6 +74,14 @@ export async function POST(request: NextRequest) {
 
 /** GET to reconnect to an in-flight job's progress or list active jobs */
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId");
 

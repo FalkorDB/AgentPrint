@@ -4,6 +4,11 @@ import { getOctokit } from "@/lib/github/client";
 import { auth } from "@/auth";
 
 export async function GET() {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const projects = await prisma.project.findMany({
     include: {
       syncState: true,
