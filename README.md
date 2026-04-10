@@ -66,6 +66,9 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | Postgres connection string (default in `.env.example` points to Docker) |
 | `GITHUB_TOKEN` | Yes | GitHub PAT with `repo` scope |
+| `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID (for login) |
+| `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret |
+| `AUTH_SECRET` | Yes | Random secret for session encryption (`openssl rand -base64 32`) |
 | `GITHUB_APP_ID` | No | GitHub App ID (alternative auth) |
 | `GITHUB_APP_PRIVATE_KEY` | No | GitHub App private key |
 | `GIT_CLONE_DIR` | No | Directory for bare repo caches (default: `/tmp/agentprint-repos`) |
@@ -87,6 +90,32 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
    ```
 
 > **Classic tokens** also work: go to [github.com/settings/tokens](https://github.com/settings/tokens) → Generate new token (classic) → select the `repo` scope (or just `public_repo` for open-source only).
+
+### Setting Up Google Login
+
+The main dashboard requires Google sign-in. Project pages are public (read-only).
+
+1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Click **Create Credentials** → **OAuth client ID**
+3. Choose **Web application**
+4. Set **Authorized redirect URIs** to:
+   - `http://localhost:3000/api/auth/callback/google` (development)
+   - `https://yourdomain.com/api/auth/callback/google` (production)
+5. Copy the **Client ID** and **Client Secret** into your `.env`:
+   ```
+   GOOGLE_CLIENT_ID="xxxxxxxxxxxx.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="GOCSPX-xxxxxxxxxxxx"
+   ```
+6. Generate an auth secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+   Add it to `.env`:
+   ```
+   AUTH_SECRET="your-generated-secret"
+   ```
+
+> **Note:** If you haven't set up a Google Cloud project yet, you'll first need to create one and configure the [OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) (External, with your app name and email).
 
 ### Docker Commands
 
@@ -116,13 +145,16 @@ docker rm -f agentprint-db
 ```
 src/
 ├── app/                     # Next.js App Router
-│   ├── page.tsx             # Dashboard home
-│   ├── projects/[id]/       # Per-project metric view
+│   ├── page.tsx             # Dashboard home (auth-protected)
+│   ├── login/               # Google sign-in page
+│   ├── projects/[owner]/[repo]/ # Per-project dashboard (public)
 │   └── api/                 # REST API routes
+├── auth.ts                  # NextAuth v5 config (Google provider)
 ├── lib/
 │   ├── db.ts                # Prisma client singleton
 │   ├── github/              # GitHub API (Octokit)
 │   ├── collector/           # Data collection + git clone
-│   └── metrics/             # Metric computation engine
+│   ├── metrics/             # Metric computation engine
+│   └── events.ts            # AI model release date markers
 └── components/              # React UI components
 ```
