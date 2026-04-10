@@ -77,10 +77,17 @@ export default function HomePage() {
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
     try {
-      await fetch(`/api/projects/${proj.owner}/${proj.repo}`, {
+      const res = await fetch(`/api/projects/${proj.owner}/${proj.repo}`, {
         method: "PUT",
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || `Failed to add project (${res.status})`);
+        return;
+      }
       await fetchProjects();
+    } catch {
+      alert("Network error adding project");
     } finally {
       setAdding(false);
     }
