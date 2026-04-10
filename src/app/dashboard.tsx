@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
+import { ApiTokenManager } from "@/components/dashboard/ApiTokenManager";
 
 interface Project {
   id: string;
@@ -231,6 +232,7 @@ export default function HomePage() {
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {session.user.name ?? session.user.email}
             </span>
+            <ApiTokenManager />
             <button
               onClick={() => signOut()}
               className="text-xs text-gray-400 hover:text-gray-200 transition-colors"

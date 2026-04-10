@@ -19,6 +19,12 @@ export function getApiDocs() {
             name: "authjs.session-token",
             description: "NextAuth.js session cookie (login via /login)",
           },
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            description:
+              "API token created via POST /api/tokens. Use the raw token value as the bearer token.",
+          },
         },
       },
     },

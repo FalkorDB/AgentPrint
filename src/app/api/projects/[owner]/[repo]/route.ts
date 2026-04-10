@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getOctokit } from "@/lib/github/client";
-import { auth } from "@/auth";
+import { apiAuth } from "@/lib/api-auth";
 
 /**
  * @swagger
@@ -12,6 +12,7 @@ import { auth } from "@/auth";
  *     tags: [Projects]
  *     security:
  *       - session: []
+ *       - bearerAuth: []
  *     parameters:
  *       - name: owner
  *         in: path
@@ -36,6 +37,7 @@ import { auth } from "@/auth";
  *     tags: [Projects]
  *     security:
  *       - session: []
+ *       - bearerAuth: []
  *     parameters:
  *       - name: owner
  *         in: path
@@ -54,11 +56,11 @@ import { auth } from "@/auth";
  *         description: Project not found
  */
 export async function PUT(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
+  const authResult = await apiAuth(request);
+  if (!authResult.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -171,11 +173,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
+  const authResult = await apiAuth(request);
+  if (!authResult.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

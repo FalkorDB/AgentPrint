@@ -145,3 +145,13 @@ model StarHistory {
   @@unique([projectId, month])
   @@index([projectId, month])
 }
+
+model ApiToken {
+  id             String    @id @default(cuid())
+  name           String
+  tokenHash      String    @unique
+  prefix         String
+  createdByEmail String?
+  createdAt      DateTime  @default(now())
+  lastUsedAt     DateTime?
+}

@@ -21,6 +21,12 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // API requests with Authorization header bypass middleware redirect —
+  // each route validates the token inline via apiAuth()
+  if (pathname.startsWith("/api/") && req.headers.get("authorization")) {
+    return NextResponse.next();
+  }
+
   // Redirect unauthenticated users to login
   if (!req.auth) {
     return NextResponse.redirect(new URL("/login", req.url));

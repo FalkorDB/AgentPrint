@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { collectProjectData } from "@/lib/collector";
 import { computeAndStoreMetrics } from "@/lib/metrics/compute";
 import { computeAndStoreScore } from "@/lib/metrics/score";
-import { auth } from "@/auth";
+import { apiAuth } from "@/lib/api-auth";
 
 /** In-flight sync jobs keyed by projectId so clients can reconnect */
 const activeJobs = new Map<
@@ -73,11 +73,11 @@ async function resolveProjectId(owner: string, repo: string): Promise<string | n
  *         description: Project not found
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
+  const authResult = await apiAuth(request);
+  if (!authResult.authenticated) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -138,11 +138,11 @@ export async function POST(
 
 /** GET to reconnect to an in-flight job's progress */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
 ) {
-  const session = await auth();
-  if (!session) {
+  const authResult = await apiAuth(request);
+  if (!authResult.authenticated) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

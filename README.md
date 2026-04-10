@@ -164,6 +164,23 @@ Interactive API documentation is available at [`/api-docs`](https://agentprint.f
 | GET | `/api/projects/{owner}/{repo}/stars` | Public | Star history |
 | POST | `/api/projects/{owner}/{repo}/collect` | ✅ | Start data sync (SSE stream) |
 | GET | `/api/projects/{owner}/{repo}/collect` | ✅ | Reconnect to active sync job |
+| GET | `/api/tokens` | Session | List API tokens |
+| POST | `/api/tokens` | Session | Create a new API token |
+| DELETE | `/api/tokens/{id}` | Session | Revoke an API token |
+
+### Authentication
+
+Protected endpoints (marked ✅) accept either:
+
+1. **Session cookie** — log in via the dashboard at `/login`
+2. **API token** — pass `Authorization: Bearer <token>` header
+
+API tokens are managed from the dashboard (key icon in the header) or via the `/api/tokens` endpoints (session auth only — tokens cannot create other tokens).
+
+```bash
+# Example: list projects with an API token
+curl -H "Authorization: Bearer ap_abc123..." https://agentprint.falkordb.com/api/projects
+```
 
 ## Architecture
 

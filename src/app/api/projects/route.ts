@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { auth } from "@/auth";
+import { apiAuth } from "@/lib/api-auth";
 
 /**
  * @swagger
@@ -11,15 +11,16 @@ import { auth } from "@/auth";
  *     tags: [Projects]
  *     security:
  *       - session: []
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Array of project objects
  *       401:
  *         description: Unauthorized
  */
-export async function GET() {
-  const session = await auth();
-  if (!session) {
+export async function GET(request: NextRequest) {
+  const result = await apiAuth(request);
+  if (!result.authenticated) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
