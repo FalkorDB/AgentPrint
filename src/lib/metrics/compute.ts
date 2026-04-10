@@ -198,7 +198,7 @@ export async function computeAndStoreMetrics(
   const months: string[] = [];
   const start = new Date(earliest.committedAt);
   const end = new Date(latest.committedAt);
-  const cursor = new Date(start.getUTCFullYear(), start.getUTCMonth(), 1);
+  const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), 1));
 
   while (cursor <= end) {
     const y = cursor.getUTCFullYear();
