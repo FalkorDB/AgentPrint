@@ -17,7 +17,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
 
       - name: Generate Prisma client
         run: npx prisma generate
@@ -57,7 +57,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install --no-audit --no-fund
+      - run: npm ci
 
       - name: Generate Prisma client
         run: npx prisma generate
