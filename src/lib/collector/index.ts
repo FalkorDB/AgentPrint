@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { fetchPullRequests, fetchPRReviews } from "@/lib/github/pulls";
 import { fetchCommits } from "@/lib/github/commits";
 import { getFileChanges } from "./git-clone";
-import { isBot } from "@/lib/github/client";
+import { isBot, getOctokit } from "@/lib/github/client";
 
 export interface CollectionResult {
   projectId: string;
@@ -24,8 +24,24 @@ export async function collectProjectData(
     include: { syncState: true },
   });
 
-  const { owner, repo, defaultBranch } = project;
+  const { owner, repo } = project;
   const syncState = project.syncState;
+
+  // Auto-detect and update the default branch from GitHub
+  let defaultBranch = project.defaultBranch;
+  try {
+    const octokit = getOctokit();
+    const { data } = await octokit.rest.repos.get({ owner, repo });
+    defaultBranch = data.default_branch;
+    if (defaultBranch !== project.defaultBranch) {
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { defaultBranch },
+      });
+    }
+  } catch {
+    // Keep stored value if API call fails
+  }
 
   const sinceDate = syncState?.lastCommitDate ?? undefined;
   const lastSha = syncState?.lastCommitSha ?? undefined;
