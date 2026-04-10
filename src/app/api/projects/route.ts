@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getOctokit } from "@/lib/github/client";
 
 export async function GET() {
   const projects = await prisma.project.findMany({
@@ -30,13 +31,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Auto-detect default branch from GitHub if not explicitly provided
+  let branch = defaultBranch;
+  if (!branch) {
+    try {
+      const octokit = getOctokit();
+      const { data } = await octokit.rest.repos.get({ owner, repo });
+      branch = data.default_branch;
+    } catch {
+      branch = "main";
+    }
+  }
+
   const project = await prisma.project.upsert({
     where: { owner_repo: { owner, repo } },
-    update: { defaultBranch: defaultBranch || "main" },
+    update: { defaultBranch: branch },
     create: {
       owner,
       repo,
-      defaultBranch: defaultBranch || "main",
+      defaultBranch: branch,
     },
   });
 
