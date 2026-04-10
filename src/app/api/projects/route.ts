@@ -52,12 +52,16 @@ export async function POST(request: NextRequest) {
     githubStars = repoData.stargazers_count;
 
     // Fetch commit & PR counts in parallel via search API
-    const [commitSearch, prSearch] = await Promise.all([
-      octokit.rest.search.commits({ q: `repo:${owner}/${repo}`, per_page: 1 }),
-      octokit.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr`, per_page: 1 }),
-    ]);
-    githubCommitCount = commitSearch.data.total_count;
-    githubPrCount = prSearch.data.total_count;
+    try {
+      const [commitSearch, prSearch] = await Promise.all([
+        octokit.rest.search.commits({ q: `repo:${owner}/${repo} merge:false`, per_page: 1 }),
+        octokit.rest.search.issuesAndPullRequests({ q: `repo:${owner}/${repo} is:pr`, per_page: 1 }),
+      ]);
+      githubCommitCount = commitSearch.data.total_count;
+      githubPrCount = prSearch.data.total_count;
+    } catch {
+      // Search API may be rate-limited separately; stars/branch still saved
+    }
   } catch {
     if (!branch) branch = "main";
   }
