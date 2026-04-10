@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchStarHistory } from "@/lib/github/stars";
-import { auth } from "@/auth";
 
 /**
  * GET /api/stars?owner=X&repo=Y
@@ -10,11 +9,6 @@ import { auth } from "@/auth";
  * and persists the results for next time.
  */
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { searchParams } = new URL(request.url);
   const owner = searchParams.get("owner");
   const repo = searchParams.get("repo");

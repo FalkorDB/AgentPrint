@@ -4,10 +4,13 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Allow public paths: login page, auth API, static assets
+  // Public paths: project pages, their APIs, login, auth, static assets
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/projects/") ||
+    pathname.startsWith("/api/metrics") ||
+    pathname.startsWith("/api/stars") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||
