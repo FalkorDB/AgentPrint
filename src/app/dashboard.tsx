@@ -46,6 +46,25 @@ export default function HomePage() {
     fetchProjects();
   }, [fetchProjects]);
 
+  // On mount, check for any in-flight sync jobs and reconnect
+  useEffect(() => {
+    async function checkActiveJobs() {
+      try {
+        const res = await fetch("/api/collect");
+        const data = await res.json();
+        if (data.active?.length) {
+          for (const pid of data.active as string[]) {
+            reconnectJob(pid);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    checkActiveJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
     try {
@@ -74,10 +93,50 @@ export default function HomePage() {
     });
   }
 
+  /** Read an SSE response and pipe events into the per-project sync state */
+  async function consumeStream(projectId: string, res: Response) {
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder();
+    let success = false;
+
+    if (reader) {
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.step) {
+                updateSyncLog(projectId, { step: data.step, detail: data.detail });
+              }
+              if (data.done && !data.error) success = true;
+              if (data.error) {
+                updateSyncLog(projectId, { step: "\u274c Error", detail: data.error });
+                setSyncStates((prev) => ({
+                  ...prev,
+                  [projectId]: { ...prev[projectId], error: true },
+                }));
+              }
+            } catch {
+              // skip malformed
+            }
+          }
+        }
+      }
+    }
+    return success;
+  }
+
   async function handleCollect(projectId: string) {
     const proj = projects.find((p) => p.id === projectId);
 
-    // Initialize sync state for this project
     setSyncStates((prev) => ({
       ...prev,
       [projectId]: { log: [], done: false },
@@ -90,42 +149,7 @@ export default function HomePage() {
         body: JSON.stringify({ projectId }),
       });
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let success = false;
-
-      if (reader) {
-        let buffer = "";
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.step) {
-                  updateSyncLog(projectId, { step: data.step, detail: data.detail });
-                }
-                if (data.done && !data.error) success = true;
-                if (data.error) {
-                  updateSyncLog(projectId, { step: "\u274c Error", detail: data.error });
-                  setSyncStates((prev) => ({
-                    ...prev,
-                    [projectId]: { ...prev[projectId], error: true },
-                  }));
-                }
-              } catch {
-                // skip malformed
-              }
-            }
-          }
-        }
-      }
+      const success = await consumeStream(projectId, res);
 
       await fetchProjects();
       setSyncStates((prev) => ({
@@ -136,6 +160,34 @@ export default function HomePage() {
       if (success && proj) {
         setTimeout(() => window.open(`/projects/${proj.owner}/${proj.repo}`, "_blank"), 1500);
       }
+    } catch {
+      setSyncStates((prev) => ({
+        ...prev,
+        [projectId]: { ...prev[projectId], done: true, error: true },
+      }));
+    }
+  }
+
+  /** Reconnect to an in-flight server job via GET /api/collect?projectId=X */
+  async function reconnectJob(projectId: string) {
+    setSyncStates((prev) => ({
+      ...prev,
+      [projectId]: { log: [{ step: "Reconnecting…" }], done: false },
+    }));
+
+    try {
+      const res = await fetch(`/api/collect?projectId=${projectId}`);
+      const ct = res.headers.get("content-type") ?? "";
+
+      // If idle (JSON response), nothing to do
+      if (ct.includes("application/json")) return;
+
+      await consumeStream(projectId, res);
+      await fetchProjects();
+      setSyncStates((prev) => ({
+        ...prev,
+        [projectId]: { ...prev[projectId], done: true },
+      }));
     } catch {
       setSyncStates((prev) => ({
         ...prev,

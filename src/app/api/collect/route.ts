@@ -57,13 +57,18 @@ export async function POST(request: NextRequest) {
   return streamJob(projectId);
 }
 
-/** GET to reconnect to an in-flight job's progress */
+/** GET to reconnect to an in-flight job's progress or list active jobs */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId");
+
+  // List all active (non-done) job IDs
   if (!projectId) {
-    return new Response(JSON.stringify({ error: "projectId required" }), {
-      status: 400,
+    const active: string[] = [];
+    for (const [id, job] of activeJobs) {
+      if (!job.done) active.push(id);
+    }
+    return new Response(JSON.stringify({ active }), {
       headers: { "Content-Type": "application/json" },
     });
   }
