@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { VelocityChart } from "@/components/charts/VelocityChart";
+import { RawVolumeChart } from "@/components/charts/RawVolumeChart";
 import { SlopChart } from "@/components/charts/SlopChart";
 import { PRHealthChart } from "@/components/charts/PRHealthChart";
 import { ActiveDevsChart } from "@/components/charts/ActiveDevsChart";
@@ -74,6 +75,10 @@ export default function ProjectDetailPage() {
         firstTimePct: m.firstTimeContribRatio !== null ? m.firstTimeContribRatio * 100 : null,
         committers: m.activeCodeContributors,
         reviewersOnly: m.activeDevs - m.activeCodeContributors,
+        totalLinesChanged:
+          m.linesChangedPerDev !== null ? Math.round(m.linesChangedPerDev * m.activeDevs) : null,
+        totalPrsMerged:
+          m.prMergeRatePerDev !== null ? Math.round(m.prMergeRatePerDev * m.activeDevs) : null,
       })),
     [metrics]
   );
@@ -178,6 +183,9 @@ export default function ProjectDetailPage() {
 
           {/* Development Velocity — area + line, dual Y-axis */}
           <VelocityChart data={chartData} markers={AI_EVENT_MARKERS} />
+
+          {/* Raw Volume — total lines + total PRs (not normalized) */}
+          <RawVolumeChart data={chartData} markers={AI_EVENT_MARKERS} />
 
           {/* Slop Signal — rejection rate + first-time contributor */}
           <SlopChart data={chartData} markers={AI_EVENT_MARKERS} />

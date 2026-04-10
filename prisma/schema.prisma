@@ -34,7 +34,7 @@ model Commit {
   message     String?
   committedAt DateTime
 
-  project  Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   fileStats CommitFileStat[]
 
   @@unique([projectId, sha])
@@ -60,13 +60,13 @@ model PullRequest {
   number      Int
   authorLogin String?
   title       String?
-  state       String    // open, closed, merged
+  state       String // open, closed, merged
   merged      Boolean   @default(false)
   createdAt   DateTime
   mergedAt    DateTime?
   closedAt    DateTime?
 
-  project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   reviews PullRequestReview[]
 
   @@unique([projectId, number])
@@ -80,7 +80,7 @@ model PullRequestReview {
   id            String   @id @default(cuid())
   pullRequestId String
   reviewerLogin String
-  state         String   // APPROVED, CHANGES_REQUESTED, COMMENTED, DISMISSED
+  state         String // APPROVED, CHANGES_REQUESTED, COMMENTED, DISMISSED
   submittedAt   DateTime
 
   pullRequest PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
@@ -90,19 +90,19 @@ model PullRequestReview {
 }
 
 model MonthlyMetric {
-  id                    String @id @default(cuid())
-  projectId             String
-  month                 String // YYYY-MM
-  metricVersion         Int    @default(1)
-  activeDevs            Int
+  id                     String   @id @default(cuid())
+  projectId              String
+  month                  String // YYYY-MM
+  metricVersion          Int      @default(1)
+  activeDevs             Int
   activeCodeContributors Int
-  linesChangedPerDev    Float?
-  prMergeRatePerDev     Float?
-  prRejectionRate       Float?
-  firstTimeContribRatio Float?
-  medianTtmHours        Float?
-  medianTtcHours        Float?
-  computedAt            DateTime @default(now())
+  linesChangedPerDev     Float?
+  prMergeRatePerDev      Float?
+  prRejectionRate        Float?
+  firstTimeContribRatio  Float?
+  medianTtmHours         Float?
+  medianTtcHours         Float?
+  computedAt             DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -111,8 +111,8 @@ model MonthlyMetric {
 }
 
 model RepoSyncState {
-  id              String   @id @default(cuid())
-  projectId       String   @unique
+  id              String    @id @default(cuid())
+  projectId       String    @unique
   lastCommitSha   String?
   lastCommitDate  DateTime?
   lastPrUpdatedAt DateTime?
