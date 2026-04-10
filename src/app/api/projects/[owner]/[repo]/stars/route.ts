@@ -2,20 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchStarHistory } from "@/lib/github/stars";
 
-/**
- * GET /api/stars?owner=X&repo=Y
- * Returns monthly cumulative star counts.
- * Reads from DB if available, otherwise fetches live from GitHub API
- * and persists the results for next time.
- */
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const owner = searchParams.get("owner");
-  const repo = searchParams.get("repo");
-
-  if (!owner || !repo) {
-    return NextResponse.json({ error: "owner and repo required" }, { status: 400 });
-  }
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ owner: string; repo: string }> }
+) {
+  const { owner, repo } = await params;
 
   try {
     const project = await prisma.project.findUnique({
@@ -32,7 +23,6 @@ export async function GET(request: NextRequest) {
       orderBy: { month: "asc" },
     });
 
-    // If DB has data, return it
     if (starHistory.length > 0) {
       const history = starHistory.map((s) => ({
         date: s.month,

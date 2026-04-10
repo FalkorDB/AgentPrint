@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { prisma } from "@/lib/db";
 import { collectProjectData } from "@/lib/collector";
 import { computeAndStoreMetrics } from "@/lib/metrics/compute";
 import { computeAndStoreScore } from "@/lib/metrics/score";
@@ -10,7 +11,21 @@ const activeJobs = new Map<
   { logs: { step: string; detail?: string }[]; done: boolean; error?: string }
 >();
 
-export async function POST(request: NextRequest) {
+async function resolveProjectId(owner: string, repo: string): Promise<string | null> {
+  const project = await prisma.project.findFirst({
+    where: {
+      owner: { equals: owner, mode: "insensitive" },
+      repo: { equals: repo, mode: "insensitive" },
+    },
+    select: { id: true },
+  });
+  return project?.id ?? null;
+}
+
+export async function POST(
+  _request: NextRequest,
+  { params }: { params: Promise<{ owner: string; repo: string }> }
+) {
   const session = await auth();
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -19,12 +34,12 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const body = await request.json();
-  const { projectId } = body;
+  const { owner, repo } = await params;
+  const projectId = await resolveProjectId(owner, repo);
 
   if (!projectId) {
-    return new Response(JSON.stringify({ error: "projectId is required" }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: "Project not found" }), {
+      status: 404,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -64,7 +79,6 @@ export async function POST(request: NextRequest) {
       log("❌ Error", job!.error);
     } finally {
       job!.done = true;
-      // Clean up after 60s so status is queryable briefly after completion
       setTimeout(() => activeJobs.delete(projectId), 60_000);
     }
   })();
@@ -72,8 +86,11 @@ export async function POST(request: NextRequest) {
   return streamJob(projectId);
 }
 
-/** GET to reconnect to an in-flight job's progress or list active jobs */
-export async function GET(request: NextRequest) {
+/** GET to reconnect to an in-flight job's progress */
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ owner: string; repo: string }> }
+) {
   const session = await auth();
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -82,16 +99,12 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const { searchParams } = new URL(request.url);
-  const projectId = searchParams.get("projectId");
+  const { owner, repo } = await params;
+  const projectId = await resolveProjectId(owner, repo);
 
-  // List all active (non-done) job IDs
   if (!projectId) {
-    const active: string[] = [];
-    for (const [id, job] of activeJobs) {
-      if (!job.done) active.push(id);
-    }
-    return new Response(JSON.stringify({ active }), {
+    return new Response(JSON.stringify({ error: "Project not found" }), {
+      status: 404,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -117,7 +130,6 @@ function streamJob(projectId: string) {
         const job = activeJobs.get(projectId);
         if (!job) return true;
 
-        // Send any new log entries
         while (cursor < job.logs.length) {
           const entry = job.logs[cursor++];
           try {
@@ -125,7 +137,7 @@ function streamJob(projectId: string) {
               encoder.encode(`data: ${JSON.stringify({ step: entry.step, detail: entry.detail })}\n\n`)
             );
           } catch {
-            return true; // client disconnected
+            return true;
           }
         }
 
@@ -144,7 +156,6 @@ function streamJob(projectId: string) {
         return false;
       }
 
-      // Poll the job log until done or client disconnects
       while (true) {
         const finished = flush();
         if (finished) break;

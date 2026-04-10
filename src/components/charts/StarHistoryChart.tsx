@@ -27,7 +27,7 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/stars?owner=${owner}&repo=${repo}`)
+    fetch(`/api/projects/${owner}/${repo}/stars`)
       .then((r) => r.json())
       .then((json) => {
         setData(json.history ?? []);

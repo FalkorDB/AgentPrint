@@ -50,7 +50,7 @@ export default function ProjectDetailPage() {
   const [rangeMonths, setRangeMonths] = useState(24);
 
   const fetchMetrics = useCallback(async () => {
-    const res = await fetch(`/api/metrics?owner=${owner}&repo=${repo}`);
+    const res = await fetch(`/api/projects/${owner}/${repo}/metrics`);
     const data = await res.json();
     setProject(data.project);
     setAllMetrics(data.metrics ?? []);

@@ -9,8 +9,7 @@ export default auth((req) => {
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/projects/") ||
-    pathname.startsWith("/api/metrics") ||
-    pathname.startsWith("/api/stars") ||
+    pathname.match(/^\/api\/projects\/[^/]+\/[^/]+\/(metrics|stars)$/) ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||

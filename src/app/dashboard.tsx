@@ -56,30 +56,29 @@ export default function HomePage() {
 
   // On mount, check for any in-flight sync jobs and reconnect
   useEffect(() => {
+    if (!projects.length) return;
     async function checkActiveJobs() {
-      try {
-        const res = await fetch("/api/collect");
-        const data = await res.json();
-        if (data.active?.length) {
-          for (const pid of data.active as string[]) {
-            reconnectJob(pid);
+      for (const proj of projects) {
+        try {
+          const res = await fetch(`/api/projects/${proj.owner}/${proj.repo}/collect`);
+          const ct = res.headers.get("content-type") ?? "";
+          if (ct.includes("text/event-stream")) {
+            consumeAndFinish(proj.id, proj.owner, proj.repo, res);
           }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
       }
     }
     checkActiveJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [projects.length > 0]);
 
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
     try {
-      await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(proj),
+      await fetch(`/api/projects/${proj.owner}/${proj.repo}`, {
+        method: "PUT",
       });
       await fetchProjects();
     } finally {
@@ -144,6 +143,7 @@ export default function HomePage() {
 
   async function handleCollect(projectId: string) {
     const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return;
 
     setSyncStates((prev) => ({
       ...prev,
@@ -151,23 +151,11 @@ export default function HomePage() {
     }));
 
     try {
-      const res = await fetch("/api/collect", {
+      const res = await fetch(`/api/projects/${proj.owner}/${proj.repo}/collect`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId }),
       });
 
-      const success = await consumeStream(projectId, res);
-
-      await fetchProjects();
-      setSyncStates((prev) => ({
-        ...prev,
-        [projectId]: { ...prev[projectId], done: true },
-      }));
-
-      if (success && proj) {
-        setTimeout(() => { window.location.href = `/projects/${proj.owner}/${proj.repo}`; }, 1500);
-      }
+      await consumeAndFinish(projectId, proj.owner, proj.repo, res);
     } catch {
       setSyncStates((prev) => ({
         ...prev,
@@ -176,36 +164,30 @@ export default function HomePage() {
     }
   }
 
-  /** Reconnect to an in-flight server job via GET /api/collect?projectId=X */
-  async function reconnectJob(projectId: string) {
+  /** Consume an SSE stream and finalize sync state; redirect on success */
+  async function consumeAndFinish(projectId: string, owner: string, repo: string, res: Response) {
     setSyncStates((prev) => ({
       ...prev,
-      [projectId]: { log: [{ step: "Reconnecting…" }], done: false },
+      [projectId]: prev[projectId] ?? { log: [], done: false },
     }));
 
-    try {
-      const res = await fetch(`/api/collect?projectId=${projectId}`);
-      const ct = res.headers.get("content-type") ?? "";
+    const success = await consumeStream(projectId, res);
 
-      // If idle (JSON response), nothing to do
-      if (ct.includes("application/json")) return;
+    await fetchProjects();
+    setSyncStates((prev) => ({
+      ...prev,
+      [projectId]: { ...prev[projectId], done: true },
+    }));
 
-      await consumeStream(projectId, res);
-      await fetchProjects();
-      setSyncStates((prev) => ({
-        ...prev,
-        [projectId]: { ...prev[projectId], done: true },
-      }));
-    } catch {
-      setSyncStates((prev) => ({
-        ...prev,
-        [projectId]: { ...prev[projectId], done: true, error: true },
-      }));
+    if (success) {
+      setTimeout(() => { window.location.href = `/projects/${owner}/${repo}`; }, 1500);
     }
   }
 
   async function handleDelete(projectId: string) {
-    await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return;
+    await fetch(`/api/projects/${proj.owner}/${proj.repo}`, { method: "DELETE" });
     await fetchProjects();
   }
 
