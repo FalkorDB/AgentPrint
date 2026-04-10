@@ -2,6 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchStarHistory } from "@/lib/github/stars";
 
+/**
+ * @swagger
+ * /api/projects/{owner}/{repo}/stars:
+ *   get:
+ *     summary: Get star history
+ *     description: Returns monthly cumulative star counts. Falls back to live GitHub API if no data in DB, then persists the results. Public endpoint.
+ *     tags: [Stars]
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Star history and total count
+ *       404:
+ *         description: Project not found
+ *       500:
+ *         description: Failed to fetch star history
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }

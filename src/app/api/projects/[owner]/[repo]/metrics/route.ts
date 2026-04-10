@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+/**
+ * @swagger
+ * /api/projects/{owner}/{repo}/metrics:
+ *   get:
+ *     summary: Get monthly velocity metrics
+ *     description: Returns all monthly metrics for a project including lines changed, PR rates, TTM/TTC, and active dev counts. Public endpoint.
+ *     tags: [Metrics]
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Project info and metrics array
+ *       404:
+ *         description: Project not found
+ */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }

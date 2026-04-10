@@ -22,6 +22,56 @@ async function resolveProjectId(owner: string, repo: string): Promise<string | n
   return project?.id ?? null;
 }
 
+/**
+ * @swagger
+ * /api/projects/{owner}/{repo}/collect:
+ *   post:
+ *     summary: Start data collection
+ *     description: Triggers GitHub data sync for a project. Returns an SSE stream with progress updates. Computes metrics and agent impact score on completion.
+ *     tags: [Collection]
+ *     security:
+ *       - session: []
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: SSE event stream with sync progress
+ *         content:
+ *           text/event-stream: {}
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Project not found
+ *   get:
+ *     summary: Reconnect to active sync job
+ *     description: Returns an SSE stream for an in-flight sync job, or idle status JSON if no job is running.
+ *     tags: [Collection]
+ *     security:
+ *       - session: []
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: SSE stream or idle status
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Project not found
+ */
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }

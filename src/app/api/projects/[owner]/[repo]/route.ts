@@ -3,6 +3,56 @@ import { prisma } from "@/lib/db";
 import { getOctokit } from "@/lib/github/client";
 import { auth } from "@/auth";
 
+/**
+ * @swagger
+ * /api/projects/{owner}/{repo}:
+ *   put:
+ *     summary: Add or update a project
+ *     description: Creates or updates a project by owner/repo. Fetches GitHub metadata (stars, default branch, commit/PR counts) with a 15s timeout.
+ *     tags: [Projects]
+ *     security:
+ *       - session: []
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *         description: GitHub repository owner
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *         description: GitHub repository name
+ *     responses:
+ *       201:
+ *         description: Project created or updated
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ *   delete:
+ *     summary: Remove a project
+ *     description: Deletes a project and all its associated data.
+ *     tags: [Projects]
+ *     security:
+ *       - session: []
+ *     parameters:
+ *       - name: owner
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: repo
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Project deleted
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Project not found
+ */
 export async function PUT(
   _request: NextRequest,
   { params }: { params: Promise<{ owner: string; repo: string }> }
