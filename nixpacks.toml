@@ -1,2 +1,3 @@
+# Nixpacks (legacy) config
 [phases.install]
 cmds = ["npm install --no-audit --no-fund"]
