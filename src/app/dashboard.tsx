@@ -106,6 +106,7 @@ export default function HomePage() {
   }
 
   async function handleCollect(projectId: string) {
+    const proj = projects.find((p) => p.id === projectId);
     setCollectingId(projectId);
     setProgressLog([]);
     setSyncDone(false);
@@ -120,9 +121,9 @@ export default function HomePage() {
       const success = await readStream(res, projectId);
 
       await fetchProjects();
-      if (success) {
+      if (success && proj) {
         setSyncDone(true);
-        setTimeout(() => router.push(`/projects/${projectId}`), 1500);
+        setTimeout(() => router.push(`/projects/${proj.owner}/${proj.repo}`), 1500);
       }
     } finally {
       setCollectingId(null);

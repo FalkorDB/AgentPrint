@@ -47,7 +47,7 @@ export function ProjectList({
         >
           <div className="flex-1">
             <Link
-              href={`/projects/${project.id}`}
+              href={`/projects/${project.owner}/${project.repo}`}
               className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
             >
               {project.owner}/{project.repo}
@@ -66,7 +66,7 @@ export function ProjectList({
           </div>
           <div className="flex gap-2">
             <Link
-              href={`/projects/${project.id}`}
+              href={`/projects/${project.owner}/${project.repo}`}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               📊 Dashboard
