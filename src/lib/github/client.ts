@@ -1,6 +1,16 @@
 import { Octokit } from "octokit";
+import { throttling } from "@octokit/plugin-throttling";
+
+const ThrottledOctokit = Octokit.plugin(throttling);
 
 let octokitInstance: Octokit | null = null;
+
+/** Optional callback invoked when rate-limit backoff kicks in */
+let _rateLimitNotify: ((msg: string) => void) | null = null;
+
+export function setRateLimitNotify(cb: ((msg: string) => void) | null) {
+  _rateLimitNotify = cb;
+}
 
 export function getOctokit(): Octokit {
   if (octokitInstance) return octokitInstance;
@@ -10,7 +20,25 @@ export function getOctokit(): Octokit {
     throw new Error("GITHUB_TOKEN environment variable is required");
   }
 
-  octokitInstance = new Octokit({ auth: token });
+  octokitInstance = new ThrottledOctokit({
+    auth: token,
+    throttle: {
+      onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+        const route = (options as { url?: string }).url ?? "unknown";
+        _rateLimitNotify?.(
+          `Rate limited on ${route}, waiting ${retryAfter}s (retry ${retryCount + 1}/3)…`
+        );
+        return retryCount < 3;
+      },
+      onSecondaryRateLimit: (retryAfter, options, _octokit, retryCount) => {
+        const route = (options as { url?: string }).url ?? "unknown";
+        _rateLimitNotify?.(
+          `Secondary rate limit on ${route}, waiting ${retryAfter}s (retry ${retryCount + 1}/3)…`
+        );
+        return retryCount < 3;
+      },
+    },
+  });
   return octokitInstance;
 }
 

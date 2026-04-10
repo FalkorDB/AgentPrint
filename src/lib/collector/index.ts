@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { fetchPullRequests, fetchPRReviews } from "@/lib/github/pulls";
 import { fetchCommits } from "@/lib/github/commits";
 import { getFileChanges } from "./git-clone";
-import { isBot, getOctokit } from "@/lib/github/client";
+import { isBot, getOctokit, setRateLimitNotify } from "@/lib/github/client";
 
 export interface CollectionResult {
   projectId: string;
@@ -23,6 +23,9 @@ export async function collectProjectData(
   onProgress?: ProgressCallback
 ): Promise<CollectionResult> {
   const progress = onProgress ?? (() => {});
+
+  // Wire rate-limit notifications into the progress stream
+  setRateLimitNotify((msg) => progress("⏳ Rate limit", msg));
 
   const project = await prisma.project.findUniqueOrThrow({
     where: { id: projectId },
@@ -190,10 +193,19 @@ export async function collectProjectData(
 
   // 6. Fetch and persist reviews for new/updated PRs
   let reviewsCollected = 0;
+  let reviewErrors = 0;
   for (let i = 0; i < prs.length; i++) {
     const pr = prs[i];
     progress("Fetching reviews…", `PR #${pr.number} (${i + 1}/${prs.length})`);
-    const reviews = await fetchPRReviews(owner, repo, pr.number);
+    let reviews;
+    try {
+      reviews = await fetchPRReviews(owner, repo, pr.number);
+    } catch (err) {
+      reviewErrors++;
+      const msg = err instanceof Error ? err.message : String(err);
+      progress("⚠ Review fetch failed", `PR #${pr.number}: ${msg}`);
+      continue;
+    }
     for (const review of reviews) {
       try {
         const prRecord = await prisma.pullRequest.findUnique({
@@ -215,7 +227,10 @@ export async function collectProjectData(
       }
     }
   }
-  progress("Reviews stored", `${reviewsCollected} reviews`);
+  progress(
+    "Reviews stored",
+    `${reviewsCollected} reviews${reviewErrors > 0 ? ` (${reviewErrors} PRs skipped due to errors)` : ""}`
+  );
 
   // 7. Update sync state
   progress("Updating sync state…");
@@ -253,6 +268,9 @@ export async function collectProjectData(
       lastSyncAt: new Date(),
     },
   });
+
+  // Detach rate-limit callback
+  setRateLimitNotify(null);
 
   return {
     projectId,
