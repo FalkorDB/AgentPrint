@@ -10,11 +10,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 GitHub Project Velocity Tracker. Next.js + Postgres + GitHub API + git clone. Computes 6 monthly metrics per project normalized per active developer.
 
 ## Commands
-- `npm run dev` — dev server
+- `make up` — full dev startup (db + migrations + dev server)
+- `make up-prod` — full production startup
+- `make db` / `make db-stop` — manage Docker Postgres
+- `make migrate` — run Prisma migrations
+- `make generate` — regenerate Prisma client
 - `npm run build` — production build
 - `npx tsc --noEmit` — type check
-- `npx prisma generate` — regenerate Prisma client
-- `npx prisma migrate dev` — run migrations
 
 ## Key Directories
 - `src/lib/github/` — GitHub API clients (Octokit)

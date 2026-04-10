@@ -33,43 +33,32 @@ All metrics are computed monthly and normalized per **active developer** (unique
 ## Setup
 
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Copy and configure environment
+# 1. Copy and configure environment
 cp .env.example .env
 # Edit .env — set GITHUB_TOKEN (see below)
 
-# 3. Start everything (Docker Postgres + migrations + app)
-./start.sh          # production mode
-./start.sh --dev    # development mode with hot-reload
+# 2. Start everything (installs deps, starts Postgres, migrates, launches app)
+make up          # development mode (hot-reload)
+make up-prod     # production mode
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 
-<details>
-<summary>Manual steps (if not using start.sh)</summary>
+### Available Make Targets
 
-```bash
-# 3. Start PostgreSQL with Docker
-docker run -d \
-  --name agentprint-db \
-  -e POSTGRES_DB=agentprint \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -p 5432:5432 \
-  postgres:16-alpine
-
-# 4. Run database migrations
-npx prisma migrate dev --name init
-
-# 5. Generate Prisma client
-npx prisma generate
-
-# 6. Start development server
-npm run dev
-```
-</details>
+| Target | Description |
+|--------|-------------|
+| `make up` | Full dev startup (install → db → migrate → generate → dev) |
+| `make up-prod` | Full production startup (install → db → migrate → generate → build → start) |
+| `make db` | Start/create Docker Postgres |
+| `make db-stop` | Stop Postgres container |
+| `make db-rm` | Remove Postgres container |
+| `make migrate` | Run Prisma migrations |
+| `make generate` | Generate Prisma client |
+| `make dev` | Start dev server |
+| `make build` | Production build |
+| `make clean` | Remove build artifacts + node_modules |
+| `make help` | Show all targets |
 
 ### Environment Variables
 
