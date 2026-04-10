@@ -153,13 +153,17 @@ docker rm -f agentprint-db
 
 ## API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/projects` | List tracked projects |
-| POST | `/api/projects` | Add a project `{ owner, repo, defaultBranch? }` |
-| DELETE | `/api/projects?id=X` | Remove a project |
-| POST | `/api/collect` | Trigger data collection + metric computation `{ projectId }` |
-| GET | `/api/metrics?project_id=X` | Get monthly metrics for a project |
+Interactive API documentation is available at [`/api-docs`](https://agentprint.falkordb.com/api-docs) (Swagger UI).
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/projects` | ✅ | List all tracked projects |
+| PUT | `/api/projects/{owner}/{repo}` | ✅ | Add or update a project |
+| DELETE | `/api/projects/{owner}/{repo}` | ✅ | Remove a project |
+| GET | `/api/projects/{owner}/{repo}/metrics` | Public | Monthly velocity metrics |
+| GET | `/api/projects/{owner}/{repo}/stars` | Public | Star history |
+| POST | `/api/projects/{owner}/{repo}/collect` | ✅ | Start data sync (SSE stream) |
+| GET | `/api/projects/{owner}/{repo}/collect` | ✅ | Reconnect to active sync job |
 
 ## Architecture
 
