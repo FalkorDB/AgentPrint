@@ -113,7 +113,7 @@ export function ProjectList({
     if (!search.trim()) return projects;
     const q = search.toLowerCase();
     return projects.filter(
-      (p) => p.owner.toLowerCase().includes(q) || p.repo.toLowerCase().includes(q)
+      (p) => `${p.owner}/${p.repo}`.toLowerCase().includes(q)
     );
   }, [projects, search]);
 
