@@ -4,6 +4,7 @@ import { collectProjectData } from "@/lib/collector";
 import { computeAndStoreMetrics } from "@/lib/metrics/compute";
 import { computeAndStoreScore } from "@/lib/metrics/score";
 import { apiAuth } from "@/lib/api-auth";
+import { GitHubRateLimitError } from "@/lib/github/client";
 
 /** In-flight sync jobs keyed by projectId so clients can reconnect */
 const activeJobs = new Map<
@@ -124,9 +125,15 @@ export async function POST(
         `${result.commitsCollected} commits, ${result.prsCollected} PRs, ${metrics.length} months · ${scoreMsg}`
       );
     } catch (error) {
-      job!.error =
-        error instanceof Error ? error.message : String(error);
-      log("❌ Error", job!.error);
+      if (error instanceof GitHubRateLimitError) {
+        const retryMin = Math.ceil(error.retryAfterSeconds / 60);
+        job!.error = `GitHub API rate limit reached. Partial data has been saved. Please retry in ~${retryMin} minute(s) to continue syncing.`;
+        log("⚠ Rate limited", job!.error);
+      } else {
+        job!.error =
+          error instanceof Error ? error.message : String(error);
+        log("❌ Error", job!.error);
+      }
     } finally {
       job!.done = true;
       setTimeout(() => activeJobs.delete(projectId), 60_000);
