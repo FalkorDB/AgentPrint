@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { signIn } from "next-auth/react";
 
 interface LoginModalProps {
@@ -8,6 +9,15 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ open, onClose }: LoginModalProps) {
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
@@ -16,10 +26,13 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-modal-title"
         className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-xl border border-gray-200 dark:border-gray-700 text-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 id="login-modal-title" className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Sign in to AgentPrint
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">

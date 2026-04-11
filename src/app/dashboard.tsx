@@ -75,8 +75,7 @@ export default function HomePage() {
       }
     }
     checkActiveJobs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects.length > 0]);
+  }, [isAuthenticated, projects.length > 0]);
 
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
