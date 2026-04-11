@@ -4,13 +4,15 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Public paths: project pages, their APIs, login, auth, static assets
+  // Public paths: home, project pages, their APIs, login, auth, static assets
   if (
+    pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api-docs") ||
     pathname.startsWith("/projects/") ||
     pathname.match(/^\/api\/projects\/[^/]+\/[^/]+\/(metrics|stars)$/) ||
+    (pathname === "/api/projects" && req.method === "GET") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||

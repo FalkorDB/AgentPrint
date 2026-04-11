@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     skip: offset,
     take: limit,
     include: {
-      syncState: true,
+      syncState: { select: { lastSyncAt: true } },
       _count: {
         select: {
           commits: true,
