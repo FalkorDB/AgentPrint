@@ -133,10 +133,12 @@ export default function ProjectDetailPage() {
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="text-2xl text-gray-400 hover:text-gray-200 transition-colors"
+            className="flex items-center gap-1 text-gray-400 hover:text-gray-200 transition-colors"
+            title="AgentPrint Home"
           >
-            ←
+            <img src="/logo.png" alt="AgentPrint" className="h-7 w-7" />
           </Link>
+          <span className="text-gray-600">|</span>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {project?.owner}/{project?.repo}
             <a
