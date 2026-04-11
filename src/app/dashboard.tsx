@@ -236,7 +236,10 @@ export default function HomePage() {
             </span>
             <ApiTokenManager />
             <button
-              onClick={() => signOut()}
+              onClick={async () => {
+                await signOut({ redirect: false });
+                window.location.reload();
+              }}
               className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
             >
               Sign out
