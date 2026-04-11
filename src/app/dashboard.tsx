@@ -255,6 +255,23 @@ export default function HomePage() {
         )}
       </header>
 
+      {!isAuthenticated && (
+        <section className="mb-10">
+          <a
+            href="https://github.com/FalkorDB/AgentPrint/issues/new?template=repo_request.yml&title=%5BRepo+Request%5D+owner%2Frepo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-blue-500 text-blue-400 hover:bg-blue-500/10 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            Request a repo to track
+          </a>
+          <p className="mt-2 text-sm text-gray-500">
+            Opens a GitHub Issue — no sign-in required
+          </p>
+        </section>
+      )}
+
       {isAuthenticated && (
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">

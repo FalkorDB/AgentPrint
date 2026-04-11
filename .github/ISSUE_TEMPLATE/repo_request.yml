@@ -1,0 +1,25 @@
+name: "🔍 Repo Tracking Request"
+description: Request a new GitHub repository to be tracked by AgentPrint
+title: "[Repo Request] "
+labels: ["repo-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a repo! Please fill in the details below.
+  - type: input
+    id: repo_url
+    attributes:
+      label: Repository URL
+      description: Full GitHub URL of the repository you'd like tracked
+      placeholder: "https://github.com/owner/repo"
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why should we track this repo?
+      description: Brief explanation of why this project is interesting to analyze
+      placeholder: "e.g., Large open-source project with heavy AI agent usage"
+    validations:
+      required: false
