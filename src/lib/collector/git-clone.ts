@@ -1,4 +1,4 @@
-import { getOctokit } from "../github/client";
+import { getOctokit, asRateLimitError } from "../github/client";
 
 /** File patterns to exclude from line-count metrics */
 const EXCLUDED_PATTERNS = [
@@ -33,9 +33,16 @@ export interface GitFileChange {
 
 export type FileChangeProgress = (done: number, total: number) => void;
 
+export interface FileChangeFetchResult {
+  changes: GitFileChange[];
+  rateLimited: boolean;
+  rateLimitMessage?: string;
+  rateLimitedCommits: number;
+}
+
 /**
  * Fetch per-file changes from the GitHub API for each commit.
- * Replaces git clone — no system git binary needed.
+ * Reports rate limit errors instead of silently swallowing them.
  */
 export async function getFileChanges(
   owner: string,
@@ -44,7 +51,7 @@ export async function getFileChanges(
   since?: Date,
   lastSha?: string,
   onProgress?: FileChangeProgress
-): Promise<GitFileChange[]> {
+): Promise<FileChangeFetchResult> {
   const octokit = getOctokit();
   const changes: GitFileChange[] = [];
 
@@ -57,23 +64,41 @@ export async function getFileChanges(
     per_page: 100,
   });
 
-  for await (const { data } of iterator) {
-    for (const c of data) {
-      if (lastSha && c.sha === lastSha) break;
-      commits.push({
-        sha: c.sha,
-        authorEmail: c.commit.author?.email ?? "",
-        authorName: c.commit.author?.name ?? "",
-        date: new Date(c.commit.committer?.date ?? c.commit.author?.date ?? ""),
-      });
+  try {
+    for await (const { data } of iterator) {
+      for (const c of data) {
+        if (lastSha && c.sha === lastSha) break;
+        commits.push({
+          sha: c.sha,
+          authorEmail: c.commit.author?.email ?? "",
+          authorName: c.commit.author?.name ?? "",
+          date: new Date(c.commit.committer?.date ?? c.commit.author?.date ?? ""),
+        });
+      }
     }
+  } catch (err) {
+    const rateErr = asRateLimitError(err);
+    if (rateErr) {
+      return {
+        changes: [],
+        rateLimited: true,
+        rateLimitMessage: `Rate limited while listing commits. Retry in ${Math.ceil(rateErr.retryAfterSeconds / 60)} min.`,
+        rateLimitedCommits: 0,
+      };
+    }
+    throw err;
   }
 
   const total = commits.length;
+  let rateLimitedCommits = 0;
+  let hitRateLimit = false;
+  let rateLimitMessage: string | undefined;
 
   // Fetch file stats per commit (batched with concurrency limit)
   const BATCH_SIZE = 10;
   for (let i = 0; i < commits.length; i += BATCH_SIZE) {
+    if (hitRateLimit) break;
+
     const batch = commits.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
       batch.map(async (commit) => {
@@ -83,9 +108,16 @@ export async function getFileChanges(
             repo,
             ref: commit.sha,
           });
-          return { commit, files: data.files ?? [] };
-        } catch {
-          return { commit, files: [] };
+          return { commit, files: data.files ?? [], rateLimited: false };
+        } catch (err) {
+          const rateErr = asRateLimitError(err);
+          if (rateErr) {
+            rateLimitedCommits++;
+            hitRateLimit = true;
+            rateLimitMessage = `Rate limited after ${i + rateLimitedCommits} of ${total} commits. Retry in ${Math.ceil(rateErr.retryAfterSeconds / 60)} min.`;
+            return { commit, files: [] as Array<{ filename: string; additions?: number; deletions?: number }>, rateLimited: true };
+          }
+          return { commit, files: [] as Array<{ filename: string; additions?: number; deletions?: number }>, rateLimited: false };
         }
       })
     );
@@ -109,5 +141,10 @@ export async function getFileChanges(
     if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }
 
-  return changes;
+  return {
+    changes,
+    rateLimited: hitRateLimit,
+    rateLimitMessage,
+    rateLimitedCommits,
+  };
 }

@@ -1,4 +1,4 @@
-import { getOctokit } from "./client";
+import { getOctokit, asRateLimitError } from "./client";
 
 interface FetchCommitsOptions {
   owner: string;
@@ -16,14 +16,19 @@ export interface CommitData {
   committedAt: Date;
 }
 
+export interface CommitFetchResult {
+  commits: CommitData[];
+  rateLimited: boolean;
+  rateLimitMessage?: string;
+}
+
 /**
  * Fetch commits from the GitHub API.
- * Used to get commit metadata (author mapping).
- * File-level stats come from git clone + git log --numstat.
+ * Returns partial results if rate limited instead of crashing.
  */
 export async function fetchCommits(
   opts: FetchCommitsOptions
-): Promise<CommitData[]> {
+): Promise<CommitFetchResult> {
   const octokit = getOctokit();
   const commits: CommitData[] = [];
 
@@ -38,20 +43,32 @@ export async function fetchCommits(
     }
   );
 
-  for await (const { data } of iterator) {
-    for (const commit of data) {
-      commits.push({
-        sha: commit.sha,
-        authorLogin: commit.author?.login ?? null,
-        authorEmail: commit.commit.author?.email ?? null,
-        authorName: commit.commit.author?.name ?? null,
-        message: commit.commit.message ?? "",
-        committedAt: new Date(
-          commit.commit.committer?.date ?? commit.commit.author?.date ?? ""
-        ),
-      });
+  try {
+    for await (const { data } of iterator) {
+      for (const commit of data) {
+        commits.push({
+          sha: commit.sha,
+          authorLogin: commit.author?.login ?? null,
+          authorEmail: commit.commit.author?.email ?? null,
+          authorName: commit.commit.author?.name ?? null,
+          message: commit.commit.message ?? "",
+          committedAt: new Date(
+            commit.commit.committer?.date ?? commit.commit.author?.date ?? ""
+          ),
+        });
+      }
     }
+  } catch (err) {
+    const rateErr = asRateLimitError(err);
+    if (rateErr) {
+      return {
+        commits,
+        rateLimited: true,
+        rateLimitMessage: `Rate limited after ${commits.length} commits. Retry in ${Math.ceil(rateErr.retryAfterSeconds / 60)} min.`,
+      };
+    }
+    throw err;
   }
 
-  return commits;
+  return { commits, rateLimited: false };
 }
