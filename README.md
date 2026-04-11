@@ -1,4 +1,4 @@
-# AgentPrint — Detect the Fingerprint AI Agents Leave on Code
+# AgentPrint - Detect the Fingerprint AI Agents Leave on projects Velocity
 
 Detect the fingerprint AI coding agents leave on open-source projects velocity by computing monthly metrics normalized per active developer.
 
@@ -17,11 +17,11 @@ All metrics are computed monthly and normalized per **active developer** (unique
 
 ## Tech Stack
 
-- **Next.js** (App Router) — Dashboard + API
-- **PostgreSQL** + **Prisma v7** — Data storage
-- **GitHub API** (Octokit) — PR/review data
-- **Git clone** (bare incremental) — Commit/file analysis
-- **Recharts** — Charts
+- **Next.js** (App Router) - Dashboard + API
+- **PostgreSQL** + **Prisma v7** - Data storage
+- **GitHub API** (Octokit) - PR/review data
+- **Git clone** (bare incremental) - Commit/file analysis
+- **Recharts** - Charts
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ All metrics are computed monthly and normalized per **active developer** (unique
 ```bash
 # 1. Copy and configure environment
 cp .env.example .env
-# Edit .env — set GITHUB_TOKEN (see below)
+# Edit .env - set GITHUB_TOKEN (see below)
 
 # 2. Start everything (installs deps, starts Postgres, migrates, launches app)
 make up          # development mode (hot-reload)
@@ -79,7 +79,7 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 2. Click **Generate new token** → **Fine-grained token**
 3. Give it a name (e.g. `agentprint`)
 4. Set expiration as needed
-5. Under **Repository access**, choose **Public Repositories (read-only)** — this is sufficient for tracking open-source projects
+5. Under **Repository access**, choose **Public Repositories (read-only)** - this is sufficient for tracking open-source projects
 6. Under **Permissions → Repository permissions**, ensure:
    - **Contents**: Read-only (for commit data)
    - **Pull requests**: Read-only (for PR and review data)
@@ -133,7 +133,7 @@ docker rm -f agentprint-db
 ### Deploying to Railway
 
 1. Create a new project on [Railway](https://railway.com)
-2. Add a **PostgreSQL** service — Railway provisions a database and sets `DATABASE_URL` automatically
+2. Add a **PostgreSQL** service - Railway provisions a database and sets `DATABASE_URL` automatically
 3. Connect your GitHub repo (or use `railway up` from the CLI)
 4. Set the following environment variables in the Railway service settings:
 
@@ -172,10 +172,10 @@ Interactive API documentation is available at [`/api-docs`](https://agentprint.f
 
 Protected endpoints (marked ✅) accept either:
 
-1. **Session cookie** — log in via the dashboard at `/login`
-2. **API token** — pass `Authorization: Bearer <token>` header
+1. **Session cookie** - log in via the dashboard at `/login`
+2. **API token** - pass `Authorization: Bearer <token>` header
 
-API tokens are managed from the dashboard (key icon in the header) or via the `/api/tokens` endpoints (session auth only — tokens cannot create other tokens).
+API tokens are managed from the dashboard (key icon in the header) or via the `/api/tokens` endpoints (session auth only - tokens cannot create other tokens).
 
 ```bash
 # Example: list projects with an API token
