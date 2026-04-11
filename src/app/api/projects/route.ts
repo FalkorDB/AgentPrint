@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { apiAuth } from "@/lib/api-auth";
 
 /**
  * @swagger
@@ -18,12 +17,7 @@ import { apiAuth } from "@/lib/api-auth";
  *       401:
  *         description: Unauthorized
  */
-export async function GET(request: NextRequest) {
-  const result = await apiAuth(request);
-  if (!result.authenticated) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function GET(_request: NextRequest) {
   const projects = await prisma.project.findMany({
     include: {
       syncState: true,

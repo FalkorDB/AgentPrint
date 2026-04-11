@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
 import { ApiTokenManager } from "@/components/dashboard/ApiTokenManager";
+import { LoginModal } from "@/components/dashboard/LoginModal";
 
 interface Project {
   id: string;
@@ -43,6 +44,8 @@ export default function HomePage() {
   const [adding, setAdding] = useState(false);
   // Per-project sync state keyed by projectId
   const [syncStates, setSyncStates] = useState<Record<string, ProjectSyncState>>({});
+  const [loginOpen, setLoginOpen] = useState(false);
+  const isAuthenticated = session?.user != null;
 
   const fetchProjects = useCallback(async () => {
     const res = await fetch("/api/projects");
@@ -57,7 +60,7 @@ export default function HomePage() {
 
   // On mount, check for any in-flight sync jobs and reconnect
   useEffect(() => {
-    if (!projects.length) return;
+    if (!projects.length || !isAuthenticated) return;
     async function checkActiveJobs() {
       for (const proj of projects) {
         try {
@@ -219,7 +222,7 @@ export default function HomePage() {
             Detect the fingerprint AI coding agents leave on open-source projects velocity
           </p>
         </div>
-        {session?.user && (
+        {session?.user ? (
           <div className="flex items-center gap-3">
             {session.user.image && (
               <img
@@ -240,15 +243,24 @@ export default function HomePage() {
               Sign out
             </button>
           </div>
+        ) : (
+          <button
+            onClick={() => setLoginOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            Sign in
+          </button>
         )}
       </header>
 
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-          Track a Repository
-        </h2>
-        <AddProjectForm onAdd={handleAdd} loading={adding} />
-      </section>
+      {isAuthenticated && (
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            Track a Repository
+          </h2>
+          <AddProjectForm onAdd={handleAdd} loading={adding} />
+        </section>
+      )}
 
       <section>
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
@@ -262,9 +274,12 @@ export default function HomePage() {
             onCollect={handleCollect}
             onDelete={handleDelete}
             syncStates={syncStates}
+            readOnly={!isAuthenticated}
           />
         )}
       </section>
+
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </main>
   );
 }
