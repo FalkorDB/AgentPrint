@@ -24,6 +24,15 @@ function textWidth(text: string): number {
   return Math.round(text.length * 6.5);
 }
 
+function escapeXml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
 function buildSvg(owner: string, repo: string, score: number): string {
   const leftLabel = "agentprint";
   const rightLabel = `${score}/100 · ${getScoreLabel(score)}`;
@@ -45,7 +54,9 @@ function buildSvg(owner: string, repo: string, score: number): string {
   const leftTextLength = leftTextWidth * 10;
   const rightTextLength = rightTextWidth * 10;
 
-  const title = `AgentPrint score for ${owner}/${repo}: ${score}/100`;
+  const safeLeftLabel = escapeXml(leftLabel);
+  const safeRightLabel = escapeXml(rightLabel);
+  const title = escapeXml(`AgentPrint score for ${owner}/${repo}: ${score}/100`);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${totalWidth}" height="20" role="img" aria-label="${title}">
   <title>${title}</title>
@@ -62,10 +73,10 @@ function buildSvg(owner: string, repo: string, score: number): string {
     <rect width="${totalWidth}" height="20" fill="url(#s)"/>
   </g>
   <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
-    <text aria-hidden="true" x="${leftTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${leftTextLength}" lengthAdjust="spacing">${leftLabel}</text>
-    <text x="${leftTextX}" y="140" transform="scale(.1)" textLength="${leftTextLength}" lengthAdjust="spacing">${leftLabel}</text>
-    <text aria-hidden="true" x="${rightTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${rightTextLength}" lengthAdjust="spacing">${rightLabel}</text>
-    <text x="${rightTextX}" y="140" transform="scale(.1)" textLength="${rightTextLength}" lengthAdjust="spacing">${rightLabel}</text>
+    <text aria-hidden="true" x="${leftTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${leftTextLength}" lengthAdjust="spacing">${safeLeftLabel}</text>
+    <text x="${leftTextX}" y="140" transform="scale(.1)" textLength="${leftTextLength}" lengthAdjust="spacing">${safeLeftLabel}</text>
+    <text aria-hidden="true" x="${rightTextX}" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="${rightTextLength}" lengthAdjust="spacing">${safeRightLabel}</text>
+    <text x="${rightTextX}" y="140" transform="scale(.1)" textLength="${rightTextLength}" lengthAdjust="spacing">${safeRightLabel}</text>
   </g>
 </svg>`;
 }
