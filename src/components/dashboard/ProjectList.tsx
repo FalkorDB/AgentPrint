@@ -157,20 +157,22 @@ export function ProjectList({
               key={project.id}
               className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <Link
-                    href={`/projects/${project.owner}/${project.repo}`}
-                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {project.owner}/{project.repo}
-                  </Link>
-                  {project.impactScore !== null && project.impactScore !== undefined && (
-                    <span className="ml-2 align-middle">
-                      <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} size="sm" />
-                    </span>
-                  )}
-                  <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                    <Link
+                      href={`/projects/${project.owner}/${project.repo}`}
+                      className="block max-w-full text-base sm:text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline truncate"
+                    >
+                      {project.owner}/{project.repo}
+                    </Link>
+                    {project.impactScore !== null && project.impactScore !== undefined && (
+                      <span className="align-middle">
+                        <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} size="sm" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-gray-500 dark:text-gray-400">
                     {project.githubStars != null && (
                       <span>⭐ {project.githubStars.toLocaleString()}</span>
                     )}
@@ -185,7 +187,7 @@ export function ProjectList({
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:flex-shrink-0">
                   <Link
                     href={`/projects/${project.owner}/${project.repo}`}
                     title="View project dashboard"
@@ -199,7 +201,7 @@ export function ProjectList({
                         onClick={() => onCollect(project.id)}
                         disabled={isSyncing}
                         title="Sync data from GitHub and compute metrics"
-                        className="w-36 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        className="flex-1 sm:flex-none sm:w-36 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
                       >
                         {isSyncing ? "Syncing…" : "Sync & Compute"}
                       </button>
