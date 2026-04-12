@@ -72,6 +72,7 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 | `GITHUB_APP_ID` | No | GitHub App ID (alternative auth) |
 | `GITHUB_APP_PRIVATE_KEY` | No | GitHub App private key |
 | `GIT_CLONE_DIR` | No | Directory for bare repo caches (default: `/tmp/agentprint-repos`) |
+| `CRON_SECRET` | No | Bearer token required by `POST /api/cron/sync` (recommended in production) |
 
 ### Creating a GitHub Personal Access Token
 
@@ -167,6 +168,21 @@ Interactive API documentation is available at [`/api-docs`](https://agentprint.f
 | GET | `/api/tokens` | Session | List API tokens |
 | POST | `/api/tokens` | Session | Create a new API token |
 | DELETE | `/api/tokens/{id}` | Session | Revoke an API token |
+| POST | `/api/cron/sync` | `CRON_SECRET` | Sync all projects stale > 24 h |
+
+### Automatic 24-hour sync
+
+`POST /api/cron/sync` finds every tracked project whose last sync was more than **24 hours ago** (or that has never been synced) and kicks off a background collection job for each one.
+
+Call this endpoint from any external scheduler — a cron job, a GitHub Actions `schedule` workflow, a Railway Cron plugin, etc.:
+
+```bash
+# Example: call from a cron job every hour (projects sync at most once per 24 h)
+curl -X POST https://agentprint.example.com/api/cron/sync \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+Set the `CRON_SECRET` environment variable to a random secret so that only your scheduler can trigger syncs. Leave it empty to disable bearer-token protection (not recommended in production).
 
 ### Authentication
 
