@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 
-const SORT_FIELDS: Record<string, Prisma.ProjectOrderByWithRelationInput> = {
-  name: { owner: "asc" },
-  score: { impactScore: { sort: "desc", nulls: "last" } },
-  stars: { githubStars: { sort: "desc", nulls: "last" } },
-  lastSync: { syncState: { lastSyncAt: { sort: "desc", nulls: "last" } } },
-};
-
 /**
  * @swagger
  * /api/projects:
@@ -75,37 +68,56 @@ const SORT_FIELDS: Record<string, Prisma.ProjectOrderByWithRelationInput> = {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() ?? "";
-  const page = Math.max(Number(searchParams.get("page") ?? 1), 1);
-  const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? 20), 1), 100);
+  const parsedPage = parseInt(searchParams.get("page") ?? "", 10);
+  const parsedLimit = parseInt(searchParams.get("limit") ?? "", 10);
+  const page = Math.max(Number.isFinite(parsedPage) ? parsedPage : 1, 1);
+  const limit = Math.min(Math.max(Number.isFinite(parsedLimit) ? parsedLimit : 20, 1), 100);
   const sortKey = searchParams.get("sort") ?? "name";
   const order = searchParams.get("order") === "desc" ? "desc" : "asc";
 
-  // Build where clause for search
-  const where: Prisma.ProjectWhereInput = q
-    ? {
+  // Build where clause for search — support "owner/repo" slash queries
+  let where: Prisma.ProjectWhereInput = {};
+  if (q) {
+    const slashIdx = q.indexOf("/");
+    if (slashIdx !== -1) {
+      const ownerPart = q.slice(0, slashIdx).trim();
+      const repoPart = q.slice(slashIdx + 1).trim();
+      where = {
+        AND: [
+          ...(ownerPart ? [{ owner: { contains: ownerPart, mode: "insensitive" as const } }] : []),
+          ...(repoPart ? [{ repo: { contains: repoPart, mode: "insensitive" as const } }] : []),
+        ],
+      };
+    } else {
+      where = {
         OR: [
           { owner: { contains: q, mode: "insensitive" } },
           { repo: { contains: q, mode: "insensitive" } },
         ],
-      }
-    : {};
+      };
+    }
+  }
 
-  // Build orderBy — flip direction if user requested opposite of default
-  let orderBy: Prisma.ProjectOrderByWithRelationInput =
-    SORT_FIELDS[sortKey] ?? SORT_FIELDS.name;
+  // Build orderBy with stable secondary keys to ensure deterministic pagination
+  const tieBreaker: Prisma.ProjectOrderByWithRelationInput[] = [
+    { repo: "asc" },
+    { id: "asc" },
+  ];
 
-  // For "name" sort, apply the user-requested order directly
+  let primaryOrder: Prisma.ProjectOrderByWithRelationInput;
   if (sortKey === "name") {
-    orderBy = { owner: order };
-  }
-  // For numeric/date sorts whose defaults are desc, flip if user wants asc
-  else if (sortKey === "stars") {
-    orderBy = { githubStars: { sort: order, nulls: "last" } };
+    primaryOrder = { owner: order };
+  } else if (sortKey === "stars") {
+    primaryOrder = { githubStars: { sort: order, nulls: "last" } };
   } else if (sortKey === "score") {
-    orderBy = { impactScore: { sort: order, nulls: "last" } };
+    primaryOrder = { impactScore: { sort: order, nulls: "last" } };
   } else if (sortKey === "lastSync") {
-    orderBy = { syncState: { lastSyncAt: { sort: order, nulls: "last" } } };
+    primaryOrder = { syncState: { lastSyncAt: { sort: order, nulls: "last" } } };
+  } else {
+    primaryOrder = { owner: order };
   }
+
+  const orderBy = [primaryOrder, ...tieBreaker];
 
   const skip = (page - 1) * limit;
 

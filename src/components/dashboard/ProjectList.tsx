@@ -45,6 +45,7 @@ interface ProjectListProps {
   projects: ProjectListItem[];
   total: number;
   hasMore: boolean;
+  loadingMore?: boolean;
   onCollect: (projectId: string) => void;
   onDelete: (projectId: string) => void;
   onSearch: (q: string) => void;
@@ -110,6 +111,7 @@ export function ProjectList({
   projects,
   total,
   hasMore,
+  loadingMore = false,
   onCollect,
   onDelete,
   onSearch,
@@ -138,7 +140,7 @@ export function ProjectList({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [search, onSearch]);
 
   if (projects.length === 0 && !search.trim()) {
     return (
@@ -261,9 +263,10 @@ export function ProjectList({
       {hasMore && (
         <button
           onClick={onLoadMore}
-          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+          disabled={loadingMore}
+          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Load more ({projects.length} of {total})
+          {loadingMore ? "Loading…" : `Load more (${projects.length} of ${total})`}
         </button>
       )}
     </div>

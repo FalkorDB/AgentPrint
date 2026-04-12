@@ -46,6 +46,7 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [adding, setAdding] = useState(false);
   // Per-project sync state keyed by projectId
   const [syncStates, setSyncStates] = useState<Record<string, ProjectSyncState>>({});
@@ -56,19 +57,29 @@ export default function HomePage() {
   searchRef.current = searchQuery;
 
   const fetchProjects = useCallback(async (q = "", pageNum = 1, append = false) => {
-    const params = new URLSearchParams();
-    if (q) params.set("q", q);
-    params.set("page", String(pageNum));
-    params.set("limit", "20");
-    const res = await fetch(`/api/projects?${params}`);
-    const data = await res.json();
-    // Guard against stale responses from earlier searches
-    if (q !== searchRef.current) return;
-    setProjects((prev) => append ? [...prev, ...data.projects] : data.projects);
-    setTotal(data.total);
-    setPage(data.page);
-    setHasMore(data.hasMore);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      params.set("page", String(pageNum));
+      params.set("limit", "20");
+      const res = await fetch(`/api/projects?${params}`);
+      if (!res.ok) {
+        console.error(`[fetchProjects] HTTP ${res.status}`);
+        return;
+      }
+      const data = await res.json();
+      // Guard against stale responses from earlier searches
+      if (q !== searchRef.current) return;
+      setProjects((prev) => append ? [...prev, ...data.projects] : data.projects);
+      setTotal(data.total);
+      setPage(data.page);
+      setHasMore(data.hasMore);
+    } catch (err) {
+      console.error("[fetchProjects] Failed:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -94,13 +105,15 @@ export default function HomePage() {
     checkActiveJobs();
   }, [isAuthenticated, projects.length > 0]);
 
-  function handleSearch(q: string) {
+  const handleSearch = useCallback((q: string) => {
     setSearchQuery(q);
     setLoading(true);
     fetchProjects(q, 1);
-  }
+  }, [fetchProjects]);
 
   function handleLoadMore() {
+    if (loadingMore) return;
+    setLoadingMore(true);
     fetchProjects(searchQuery, page + 1, true);
   }
 
@@ -323,6 +336,7 @@ export default function HomePage() {
             projects={projects}
             total={total}
             hasMore={hasMore}
+            loadingMore={loadingMore}
             onCollect={handleCollect}
             onDelete={handleDelete}
             onSearch={handleSearch}
