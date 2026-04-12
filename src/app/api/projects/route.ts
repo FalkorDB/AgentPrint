@@ -7,7 +7,7 @@ import { apiAuth } from "@/lib/api-auth";
  * /api/projects:
  *   get:
  *     summary: List all tracked projects
- *     description: Returns all projects with sync state, commit/PR/metric counts, sorted by GitHub stars. This is a public endpoint.
+ *     description: Returns tracked projects with sync state, commit/PR/metric counts, sorted by GitHub stars. This is a public endpoint; unauthenticated callers only receive projects with a completed sync (syncState.lastSyncAt != null), while authenticated callers receive all tracked projects.
  *     tags: [Projects]
  *     parameters:
  *       - in: query
