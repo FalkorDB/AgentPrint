@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
@@ -41,17 +41,33 @@ export interface ProjectSyncState {
 export default function HomePage() {
   const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   // Per-project sync state keyed by projectId
   const [syncStates, setSyncStates] = useState<Record<string, ProjectSyncState>>({});
   const [loginOpen, setLoginOpen] = useState(false);
   const isAuthenticated = session?.user != null;
+  // Track current search to avoid stale responses
+  const searchRef = useRef(searchQuery);
+  searchRef.current = searchQuery;
 
-  const fetchProjects = useCallback(async () => {
-    const res = await fetch("/api/projects");
+  const fetchProjects = useCallback(async (q = "", pageNum = 1, append = false) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    params.set("page", String(pageNum));
+    params.set("limit", "20");
+    const res = await fetch(`/api/projects?${params}`);
     const data = await res.json();
-    setProjects(data);
+    // Guard against stale responses from earlier searches
+    if (q !== searchRef.current) return;
+    setProjects((prev) => append ? [...prev, ...data.projects] : data.projects);
+    setTotal(data.total);
+    setPage(data.page);
+    setHasMore(data.hasMore);
     setLoading(false);
   }, []);
 
@@ -78,6 +94,16 @@ export default function HomePage() {
     checkActiveJobs();
   }, [isAuthenticated, projects.length > 0]);
 
+  function handleSearch(q: string) {
+    setSearchQuery(q);
+    setLoading(true);
+    fetchProjects(q, 1);
+  }
+
+  function handleLoadMore() {
+    fetchProjects(searchQuery, page + 1, true);
+  }
+
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
     try {
@@ -89,7 +115,7 @@ export default function HomePage() {
         alert(data.error || `Failed to add project (${res.status})`);
         return;
       }
-      await fetchProjects();
+      await fetchProjects(searchQuery, 1);
     } catch {
       alert("Network error adding project");
     } finally {
@@ -184,7 +210,7 @@ export default function HomePage() {
 
     const success = await consumeStream(projectId, res);
 
-    await fetchProjects();
+    await fetchProjects(searchQuery, 1);
     setSyncStates((prev) => ({
       ...prev,
       [projectId]: { ...prev[projectId], done: true },
@@ -199,7 +225,7 @@ export default function HomePage() {
     const proj = projects.find((p) => p.id === projectId);
     if (!proj) return;
     await fetch(`/api/projects/${proj.owner}/${proj.repo}`, { method: "DELETE" });
-    await fetchProjects();
+    await fetchProjects(searchQuery, 1);
   }
 
   return (
@@ -295,8 +321,12 @@ export default function HomePage() {
         ) : (
           <ProjectList
             projects={projects}
+            total={total}
+            hasMore={hasMore}
             onCollect={handleCollect}
             onDelete={handleDelete}
+            onSearch={handleSearch}
+            onLoadMore={handleLoadMore}
             syncStates={syncStates}
             readOnly={!isAuthenticated}
           />
