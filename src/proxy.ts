@@ -11,7 +11,7 @@ export default auth((req) => {
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api-docs") ||
     pathname.startsWith("/projects/") ||
-    pathname.match(/^\/api\/projects\/[^/]+\/[^/]+\/(metrics|stars)$/) ||
+    pathname.match(/^\/api\/projects\/[^/]+\/[^/]+\/(metrics|stars|badge)$/) ||
     (pathname === "/api/projects" && req.method === "GET") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
