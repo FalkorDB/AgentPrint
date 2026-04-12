@@ -10,6 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { ChartInfo } from "./ChartInfo";
+
+const STAR_HISTORY_DESCRIPTION =
+  "Shows the cumulative count of GitHub stars over time. Stars are a widely-used proxy for project visibility and community interest. Sudden spikes often correlate with press coverage, social media attention, viral posts, or major releases. A plateau or decline may suggest reduced discovery despite ongoing development.";
 
 interface StarHistoryChartProps {
   owner: string;
@@ -52,14 +56,17 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-        ⭐ Star History
-        {totalStars !== null && (
-          <span className="ml-2 text-sm font-normal text-gray-400">
-            {totalStars.toLocaleString()} total
-          </span>
-        )}
-      </h3>
+      <div className="flex items-center gap-1.5 mb-1">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          ⭐ Star History
+          {totalStars !== null && (
+            <span className="ml-2 text-sm font-normal text-gray-400">
+              {totalStars.toLocaleString()} total
+            </span>
+          )}
+        </h3>
+        <ChartInfo description={STAR_HISTORY_DESCRIPTION} />
+      </div>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         Cumulative GitHub stars over time
       </p>
