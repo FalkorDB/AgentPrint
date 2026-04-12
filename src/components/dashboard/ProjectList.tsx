@@ -141,7 +141,7 @@ export function ProjectList({
             value={search}
             onChange={(e) => { setSearch(e.target.value); setShowAll(false); }}
             placeholder="Search projects…"
-            className="w-full px-4 py-2 pl-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 pl-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
         </div>
@@ -157,8 +157,8 @@ export function ProjectList({
               key={project.id}
               className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-700"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <Link
                     href={`/projects/${project.owner}/${project.repo}`}
                     className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
@@ -170,26 +170,32 @@ export function ProjectList({
                       <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} size="sm" />
                     </span>
                   )}
-                  <div className="flex gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-wrap gap-x-1 gap-y-1 mt-2 text-sm text-gray-500 dark:text-gray-300">
                     {project.githubStars != null && (
-                      <span>⭐ {project.githubStars.toLocaleString()}</span>
+                      <span className="font-medium">⭐ {project.githubStars.toLocaleString()}</span>
                     )}
+                    {project.githubStars != null && <span className="text-gray-600 dark:text-gray-500">·</span>}
                     <span>{(project._count.commits || project.githubCommitCount || 0).toLocaleString()} commits</span>
+                    <span className="text-gray-600 dark:text-gray-500">·</span>
                     <span>{(project._count.pullRequests || project.githubPrCount || 0).toLocaleString()} PRs</span>
+                    <span className="text-gray-600 dark:text-gray-500">·</span>
                     <span>{formatAge(project.githubCreatedAt, project._count.monthlyMetrics)}</span>
                     {project.syncState?.lastSyncAt && (
-                      <span>
-                        Last sync:{" "}
-                        {new Date(project.syncState.lastSyncAt).toLocaleDateString()}
-                      </span>
+                      <>
+                        <span className="text-gray-600 dark:text-gray-500">·</span>
+                        <span>
+                          Last sync:{" "}
+                          {new Date(project.syncState.lastSyncAt).toLocaleDateString()}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-shrink-0">
                   <Link
                     href={`/projects/${project.owner}/${project.repo}`}
                     title="View project dashboard"
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
                   >
                     📊 Dashboard
                   </Link>
@@ -199,13 +205,14 @@ export function ProjectList({
                         onClick={() => onCollect(project.id)}
                         disabled={isSyncing}
                         title="Sync data from GitHub and compute metrics"
-                        className="w-36 px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors whitespace-nowrap"
                       >
                         {isSyncing ? "Syncing…" : "Sync & Compute"}
                       </button>
                       <button
                         onClick={() => onDelete(project.id)}
                         title="Remove project"
+                        aria-label="Remove project"
                         className="p-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/30 rounded-lg transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
