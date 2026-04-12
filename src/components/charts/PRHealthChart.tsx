@@ -15,6 +15,10 @@ import {
 import type { EventMarker } from "@/lib/events";
 import { ChartTooltip } from "./ChartTooltip";
 import { StaggeredLabel } from "./StaggeredLabel";
+import { ChartInfo } from "./ChartInfo";
+
+const PR_HEALTH_DESCRIPTION =
+  "Measures review-process health: median hours from PR open to merge (Time to Merge, green) and median hours from PR open to close-without-merge (Time to Close Rejected, red). Longer Time to Merge may indicate review bottlenecks or complex changes. A widening Time to Close Rejected can signal increased effort spent triaging low-quality submissions. Dashed vertical lines mark notable AI model release dates.";
 
 interface PRHealthChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,9 +35,12 @@ export function PRHealthChart({ data, markers }: PRHealthChartProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-start justify-between mb-1">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          PR Health
-        </h3>
+        <div className="flex items-center gap-1.5">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            PR Health
+          </h3>
+          <ChartInfo description={PR_HEALTH_DESCRIPTION} />
+        </div>
         <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer select-none">
           <input
             type="checkbox"
