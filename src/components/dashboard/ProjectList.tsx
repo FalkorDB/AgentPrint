@@ -159,10 +159,10 @@ export function ProjectList({
             >
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
                     <Link
                       href={`/projects/${project.owner}/${project.repo}`}
-                      className="text-base sm:text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline truncate"
+                      className="block max-w-full text-base sm:text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline truncate"
                     >
                       {project.owner}/{project.repo}
                     </Link>

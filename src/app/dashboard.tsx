@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
 import { ProjectList } from "@/components/dashboard/ProjectList";
@@ -206,7 +207,7 @@ export default function HomePage() {
       <header className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
-            <img src="/logo.png" alt="AgentPrint" className="inline h-9 w-9 sm:h-10 sm:w-10 mr-1 align-middle" /> AgentPrint
+            <Image src="/logo.png" alt="AgentPrint" width={40} height={40} className="inline h-9 w-9 sm:h-10 sm:w-10 mr-1 align-middle" priority /> AgentPrint
             <a
               href="https://github.com/FalkorDB/AgentPrint"
               target="_blank"
