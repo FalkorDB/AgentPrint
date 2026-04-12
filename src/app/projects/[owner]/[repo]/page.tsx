@@ -11,6 +11,7 @@ import { ActiveDevsChart } from "@/components/charts/ActiveDevsChart";
 import { StarHistoryChart } from "@/components/charts/StarHistoryChart";
 import { DeltaCard } from "@/components/dashboard/DeltaCard";
 import { AgentScoreBadge } from "@/components/dashboard/AgentScoreBadge";
+import { CopyBadgeButton } from "@/components/dashboard/CopyBadgeButton";
 import { AI_EVENT_MARKERS } from "@/lib/events";
 
 interface MetricData {
@@ -189,6 +190,10 @@ export default function ProjectDetailPage() {
           >
             ↻ Refresh
           </button>
+
+          {project && (
+            <CopyBadgeButton owner={project.owner} repo={project.repo} />
+          )}
         </div>
       </div>
 
