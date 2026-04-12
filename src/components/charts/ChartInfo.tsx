@@ -40,8 +40,10 @@ export function ChartInfo({ description }: ChartInfoProps) {
         id={tooltipId}
         role="tooltip"
         className="
-          pointer-events-none absolute z-50 bottom-full left-0 mb-2
-          w-72 rounded-lg px-3 py-2
+          pointer-events-none absolute z-50 bottom-full mb-2
+          right-0 sm:right-auto sm:left-0
+          w-72 max-w-[min(18rem,calc(100vw-2rem))]
+          rounded-lg px-3 py-2
           bg-gray-900 dark:bg-gray-700
           text-xs text-gray-100 leading-relaxed
           shadow-lg border border-gray-700 dark:border-gray-600
