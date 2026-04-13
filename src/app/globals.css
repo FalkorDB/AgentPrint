@@ -24,3 +24,9 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Visible focus indicators for keyboard navigation (Issue #6) */
+:focus-visible {
+  outline: 2px solid #60a5fa; /* blue-400 */
+  outline-offset: 2px;
+}

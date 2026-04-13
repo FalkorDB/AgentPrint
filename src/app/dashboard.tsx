@@ -203,8 +203,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-      <header className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+    <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col min-h-screen">
+      <header className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
             <Image src="/logo.png" alt="AgentPrint" width={40} height={40} className="inline h-9 w-9 sm:h-10 sm:w-10 mr-1 align-middle" priority /> AgentPrint
@@ -218,7 +218,7 @@ export default function HomePage() {
               <svg className="h-7 w-7 inline" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.31-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6.02 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.62-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3" /></svg>
             </a>
           </h1>
-          <p className="mt-2 text-base sm:text-lg text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-base sm:text-lg text-gray-600 dark:text-gray-300">
             Detect the fingerprint AI coding agents leave on open-source projects velocity
           </p>
         </div>
@@ -227,12 +227,15 @@ export default function HomePage() {
             {session.user.image && (
               <img
                 src={session.user.image}
-                alt=""
+                alt={`${session.user.name ?? "User"} avatar`}
                 className="h-8 w-8 rounded-full"
                 referrerPolicy="no-referrer"
               />
             )}
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span
+              className="text-sm text-gray-600 dark:text-gray-300 max-w-[150px] truncate"
+              title={session.user.name ?? session.user.email ?? undefined}
+            >
               {session.user.name ?? session.user.email}
             </span>
             <ApiTokenManager />
@@ -241,7 +244,8 @@ export default function HomePage() {
                 await signOut({ redirect: false });
                 window.location.reload();
               }}
-              className="text-xs text-gray-400 hover:text-gray-200 transition-colors"
+              aria-label="Sign out"
+              className="px-3 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors rounded-lg"
             >
               Sign out
             </button>
@@ -257,7 +261,7 @@ export default function HomePage() {
       </header>
 
       {!isAuthenticated && (
-        <section className="mb-10">
+        <section className="mb-6">
           <a
             href="https://github.com/FalkorDB/AgentPrint/issues/new?template=repo_request.yml&title=%5BRepo+Request%5D+owner%2Frepo"
             target="_blank"
@@ -274,7 +278,7 @@ export default function HomePage() {
       )}
 
       {isAuthenticated && (
-        <section className="mb-10">
+        <section className="mb-6">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Track a Repository
           </h2>
@@ -300,6 +304,50 @@ export default function HomePage() {
       </section>
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+
+      <footer className="mt-auto pt-12 pb-6 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="AgentPrint" className="h-5 w-5" />
+            <span>AgentPrint by{" "}
+              <a
+                href="https://www.falkordb.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-gray-200 underline transition-colors"
+              >
+                FalkorDB
+              </a>
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/FalkorDB/AgentPrint"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-200 transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://github.com/FalkorDB/AgentPrint#readme"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-200 transition-colors"
+            >
+              Documentation
+            </a>
+            <a
+              href="https://github.com/FalkorDB/AgentPrint/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-200 transition-colors"
+            >
+              Report an Issue
+            </a>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
