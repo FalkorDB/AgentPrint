@@ -107,7 +107,6 @@ export default function HomePage() {
 
   const handleSearch = useCallback((q: string) => {
     setSearchQuery(q);
-    setLoading(true);
     fetchProjects(q, 1);
   }, [fetchProjects]);
 
@@ -329,7 +328,7 @@ export default function HomePage() {
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
           Tracked Projects
         </h2>
-        {loading ? (
+        {loading && projects.length === 0 ? (
           <div className="text-center py-12 text-gray-500">Loading...</div>
         ) : (
           <ProjectList

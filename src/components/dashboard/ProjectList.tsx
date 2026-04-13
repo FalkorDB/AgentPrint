@@ -121,6 +121,7 @@ export function ProjectList({
 }: ProjectListProps) {
   const [search, setSearch] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
 
   // Client-side fast filter while debounced server request is in flight
   const filtered = useMemo(() => {
@@ -131,8 +132,12 @@ export function ProjectList({
     );
   }, [projects, search]);
 
-  // Debounce search input and call parent's onSearch
+  // Debounce search input and call parent's onSearch (skip initial mount)
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onSearch(search.trim());
