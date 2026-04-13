@@ -37,12 +37,12 @@ export function DeltaCard({ title, current, previous, format = "number", unit }:
   const t = trendConfig[trend];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 shadow-sm border border-gray-200 dark:border-gray-700">
       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
         {title}
       </p>
-      <div className="mt-2 flex items-baseline gap-3">
-        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="mt-2 flex items-baseline gap-2 sm:gap-3">
+        <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
           {formatValue(current, format, unit)}
         </span>
         {delta !== null && (

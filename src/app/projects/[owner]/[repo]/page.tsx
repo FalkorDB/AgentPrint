@@ -121,20 +121,20 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <main className="max-w-7xl mx-auto px-6 py-10">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-10">
         <p className="text-gray-500">Loading metrics…</p>
       </main>
     );
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-8">
+    <main className="max-w-7xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
       {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-shrink">
           <Link
             href="/"
-            className="flex items-center gap-1 text-gray-400 hover:text-gray-200 transition-colors"
+            className="flex-shrink-0 flex items-center gap-1 text-gray-400 hover:text-gray-200 transition-colors"
             title="AgentPrint Home"
           >
             <img src="/logo.png" alt="AgentPrint" className="h-7 w-7" />
@@ -143,13 +143,13 @@ export default function ProjectDetailPage() {
             href="https://github.com/FalkorDB/AgentPrint"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="flex-shrink-0 text-gray-400 hover:text-gray-200 transition-colors"
             title="AgentPrint on GitHub"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57L9 21.07c-3.34.72-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.73.09-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.31-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6.02 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.62-5.48 5.92.42.36.81 1.1.81 2.22l-.01 3.29c0 .31.2.69.82.57A12 12 0 0 0 12 .3" /></svg>
           </a>
-          <span className="text-gray-600">|</span>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <span className="text-gray-600 hidden sm:inline">|</span>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
             {project?.owner}/{project?.repo}
             <a
               href={`https://github.com/${project?.owner}/${project?.repo}`}
@@ -162,18 +162,20 @@ export default function ProjectDetailPage() {
             </a>
           </h1>
           {project?.impactScore !== null && project?.impactScore !== undefined && (
-            <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} />
+            <div className="flex-shrink-0">
+              <AgentScoreBadge score={project.impactScore} confidence={project.impactConfidence} />
+            </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Date range selector */}
           <div className="flex rounded-lg border border-gray-600 overflow-hidden">
             {RANGE_OPTIONS.map((opt) => (
               <button
                 key={opt.months}
                 onClick={() => setRangeMonths(opt.months)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1.5 text-xs font-medium transition-colors ${
                   rangeMonths === opt.months
                     ? "bg-blue-600 text-white"
                     : "bg-gray-800 text-gray-400 hover:text-white"
@@ -186,7 +188,7 @@ export default function ProjectDetailPage() {
 
           <button
             onClick={fetchMetrics}
-            className="px-4 py-1.5 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-3 sm:px-4 py-1.5 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
           >
             ↻ Refresh
           </button>
@@ -205,9 +207,9 @@ export default function ProjectDetailPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Summary strip — 4 delta cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
             <DeltaCard
               title="Lines Changed / Dev"
               current={latest?.linesChangedPerDev ?? null}
