@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     images: [{ url: "/logo.png", width: 1024, height: 1024 }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
     description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
     images: ["/logo.png"],
