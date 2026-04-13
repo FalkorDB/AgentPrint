@@ -35,7 +35,7 @@ export function MetricChart({
         {title}
       </h3>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+        <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
           <XAxis
             dataKey="month"
