@@ -25,13 +25,15 @@ export const metadata: Metadata = {
     title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
     description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
     siteName: "AgentPrint",
-    images: [{ url: "/logo.png", width: 1024, height: 1024 }],
+    type: "website",
+    url: "https://agentprint.falkordb.com",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, type: "image/png" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
     description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
-    images: ["/logo.png"],
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
 };
 

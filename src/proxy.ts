@@ -17,6 +17,7 @@ export default auth((req) => {
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname === "/logo.png" ||
+    pathname === "/og-image.png" ||
     pathname === "/apple-touch-icon.png" ||
     pathname === "/icon-192.png" ||
     pathname === "/icon-512.png"

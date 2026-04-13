@@ -32,13 +32,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       siteName: "AgentPrint",
-      images: [{ url: "/logo.png", width: 1024, height: 1024 }],
+      type: "website",
+      url: `https://agentprint.falkordb.com/projects/${owner}/${repo}`,
+      images: [{ url: "/og-image.png", width: 1200, height: 630, type: "image/png" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/logo.png"],
+      images: [{ url: "/og-image.png", width: 1200, height: 630 }],
     },
   };
 }
