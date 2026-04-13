@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { ChartInfo } from "./ChartInfo";
 
 interface MetricChartProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +22,7 @@ interface MetricChartProps {
   }>;
   title: string;
   yAxisLabel?: string;
+  description?: string;
 }
 
 export function MetricChart({
@@ -28,12 +30,16 @@ export function MetricChart({
   dataKeys,
   title,
   yAxisLabel,
+  description,
 }: MetricChartProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-        {title}
-      </h3>
+      <div className="flex items-center gap-1.5 mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {title}
+        </h3>
+        {description && <ChartInfo description={description} />}
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
