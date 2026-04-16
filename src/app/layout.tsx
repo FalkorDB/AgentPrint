@@ -27,13 +27,13 @@ export const metadata: Metadata = {
     siteName: "AgentPrint",
     type: "website",
     url: "https://agentprint.falkordb.com",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, type: "image/png" }],
+    images: [{ url: "/api/og", width: 1200, height: 630, type: "image/png" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "AgentPrint — Detect the Fingerprint AI Agents Leave on Code",
     description: "Detect the fingerprint AI coding agents leave on open-source projects velocity",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/api/og", width: 1200, height: 630 }],
   },
 };
 

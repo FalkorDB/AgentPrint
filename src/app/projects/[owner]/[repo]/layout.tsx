@@ -25,6 +25,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = `${owner}/${repo}${scoreText} — AgentPrint`;
   const description = `AI agent fingerprint analysis for ${owner}/${repo}. Velocity metrics, PR health, and agent impact score.`;
 
+  const ogParams = new URLSearchParams({ owner, repo });
+  if (score !== null) ogParams.set("score", String(score));
+  const ogImage = `/api/og?${ogParams.toString()}`;
+
   return {
     title,
     description,
@@ -34,13 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "AgentPrint",
       type: "website",
       url: `https://agentprint.falkordb.com/projects/${owner}/${repo}`,
-      images: [{ url: "/og-image.png", width: 1200, height: 630, type: "image/png" }],
+      images: [{ url: ogImage, width: 1200, height: 630, type: "image/png" }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
   };
 }
