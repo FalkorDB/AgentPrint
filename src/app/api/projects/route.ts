@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { apiAuth } from "@/lib/api-auth";
 
 /**
  * @swagger
  * /api/projects:
  *   get:
  *     summary: List all tracked projects
- *     description: Returns all projects with sync state, commit/PR/metric counts, sorted by GitHub stars. This is a public endpoint.
+ *     description: Returns tracked projects with sync state, commit/PR/metric counts, sorted by GitHub stars. This is a public endpoint; unauthenticated callers only receive projects with a completed sync (syncState.lastSyncAt != null), while authenticated callers receive all tracked projects.
  *     tags: [Projects]
  *     parameters:
  *       - in: query
@@ -33,9 +34,15 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(Math.max(Number(searchParams.get("limit") ?? 50), 1), 100);
   const offset = Math.max(Number(searchParams.get("offset") ?? 0), 0);
 
+  const authResult = await apiAuth(request);
+  const isAuthenticated = authResult.authenticated;
+
   const projects = await prisma.project.findMany({
     skip: offset,
     take: limit,
+    where: isAuthenticated
+      ? undefined
+      : { syncState: { lastSyncAt: { not: null } } },
     include: {
       syncState: { select: { lastSyncAt: true } },
       _count: {
