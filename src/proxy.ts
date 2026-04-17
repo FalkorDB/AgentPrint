@@ -10,6 +10,7 @@ export default auth((req) => {
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/cron/") ||
+    pathname === "/api/og" ||
     pathname.startsWith("/api-docs") ||
     pathname.startsWith("/projects/") ||
     pathname.match(/^\/api\/projects\/[^/]+\/[^/]+\/(metrics|stars|badge)$/) ||
