@@ -39,7 +39,7 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
           ⭐ Star History
         </h3>
@@ -51,7 +51,7 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
   if (data.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
         ⭐ Star History
         {totalStars !== null && (
@@ -60,11 +60,11 @@ export function StarHistoryChart({ owner, repo }: StarHistoryChartProps) {
           </span>
         )}
       </h3>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 sm:mb-4">
         Cumulative GitHub stars over time
       </p>
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="gradStars" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#FBBF24" stopOpacity={0.5} />
