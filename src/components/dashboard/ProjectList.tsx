@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { ProjectSyncState, ProgressEntry } from "@/app/dashboard";
 import { AgentScoreBadge } from "./AgentScoreBadge";
 
 const DEFAULT_VISIBLE = 5;
+const DEBOUNCE_MS = 300;
 
 function formatAge(createdAt?: string | null, metricMonths?: number): string {
   const months = metricMonths || (createdAt ? (() => {
@@ -42,8 +43,13 @@ interface ProjectListItem {
 
 interface ProjectListProps {
   projects: ProjectListItem[];
+  total: number;
+  hasMore: boolean;
+  loadingMore?: boolean;
   onCollect: (projectId: string) => void;
   onDelete: (projectId: string) => void;
+  onSearch: (q: string) => void;
+  onLoadMore: () => void;
   syncStates: Record<string, ProjectSyncState>;
   readOnly?: boolean;
 }
@@ -103,14 +109,21 @@ function SyncStrip({ state }: { state: ProjectSyncState }) {
 
 export function ProjectList({
   projects,
+  total,
+  hasMore,
+  loadingMore = false,
   onCollect,
   onDelete,
+  onSearch,
+  onLoadMore,
   syncStates,
   readOnly = false,
 }: ProjectListProps) {
   const [search, setSearch] = useState("");
-  const [showAll, setShowAll] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(false);
 
+  // Client-side fast filter while debounced server request is in flight
   const filtered = useMemo(() => {
     if (!search.trim()) return projects;
     const q = search.toLowerCase();
@@ -119,11 +132,22 @@ export function ProjectList({
     );
   }, [projects, search]);
 
-  const isSearching = search.trim().length > 0;
-  const visible = isSearching || showAll ? filtered : filtered.slice(0, DEFAULT_VISIBLE);
-  const hiddenCount = filtered.length - visible.length;
+  // Debounce search input and call parent's onSearch (skip initial mount)
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onSearch(search.trim());
+    }, DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [search, onSearch]);
 
-  if (projects.length === 0) {
+  if (projects.length === 0 && !search.trim()) {
     return (
       <div className="text-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-lg">No projects tracked yet</p>
@@ -134,12 +158,12 @@ export function ProjectList({
 
   return (
     <div className="space-y-4">
-      {projects.length > DEFAULT_VISIBLE && (
+      {(total > DEFAULT_VISIBLE || search.trim()) && (
         <div className="relative">
           <input
             type="text"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setShowAll(false); }}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Search projects…"
             className="w-full px-4 py-2 pl-9 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -148,7 +172,7 @@ export function ProjectList({
       )}
 
       <div className="grid gap-4">
-        {visible.map((project) => {
+        {filtered.map((project) => {
           const sync = syncStates[project.id];
           const isSyncing = sync && !sync.done;
 
@@ -235,20 +259,19 @@ export function ProjectList({
         })}
       </div>
 
-      {hiddenCount > 0 && (
-        <button
-          onClick={() => setShowAll(true)}
-          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
-        >
-          Show {hiddenCount} more project{hiddenCount !== 1 ? "s" : ""}
-        </button>
+      {filtered.length === 0 && search.trim() && (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <p className="text-sm">No projects matching &ldquo;{search}&rdquo;</p>
+        </div>
       )}
-      {showAll && !isSearching && filtered.length > DEFAULT_VISIBLE && (
+
+      {hasMore && (
         <button
-          onClick={() => setShowAll(false)}
-          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="w-full py-2 text-sm text-gray-400 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Show less
+          {loadingMore ? "Loading…" : `Load more (${projects.length} of ${total})`}
         </button>
       )}
     </div>

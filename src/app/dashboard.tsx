@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { AddProjectForm } from "@/components/dashboard/AddProjectForm";
@@ -41,18 +41,45 @@ export interface ProjectSyncState {
 export default function HomePage() {
   const { data: session } = useSession();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [adding, setAdding] = useState(false);
   // Per-project sync state keyed by projectId
   const [syncStates, setSyncStates] = useState<Record<string, ProjectSyncState>>({});
   const [loginOpen, setLoginOpen] = useState(false);
   const isAuthenticated = session?.user != null;
+  // Track current search to avoid stale responses
+  const searchRef = useRef(searchQuery);
+  searchRef.current = searchQuery;
 
-  const fetchProjects = useCallback(async () => {
-    const res = await fetch("/api/projects");
-    const data = await res.json();
-    setProjects(data);
-    setLoading(false);
+  const fetchProjects = useCallback(async (q = "", pageNum = 1, append = false) => {
+    try {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      params.set("page", String(pageNum));
+      params.set("limit", "20");
+      const res = await fetch(`/api/projects?${params}`);
+      if (!res.ok) {
+        console.error(`[fetchProjects] HTTP ${res.status}`);
+        return;
+      }
+      const data = await res.json();
+      // Guard against stale responses from earlier searches
+      if (q !== searchRef.current) return;
+      setProjects((prev) => append ? [...prev, ...data.projects] : data.projects);
+      setTotal(data.total);
+      setPage(data.page);
+      setHasMore(data.hasMore);
+    } catch (err) {
+      console.error("[fetchProjects] Failed:", err);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -78,6 +105,17 @@ export default function HomePage() {
     checkActiveJobs();
   }, [isAuthenticated, projects.length > 0]);
 
+  const handleSearch = useCallback((q: string) => {
+    setSearchQuery(q);
+    fetchProjects(q, 1);
+  }, [fetchProjects]);
+
+  function handleLoadMore() {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    fetchProjects(searchQuery, page + 1, true);
+  }
+
   async function handleAdd(proj: { owner: string; repo: string }) {
     setAdding(true);
     try {
@@ -89,7 +127,7 @@ export default function HomePage() {
         alert(data.error || `Failed to add project (${res.status})`);
         return;
       }
-      await fetchProjects();
+      await fetchProjects(searchQuery, 1);
     } catch {
       alert("Network error adding project");
     } finally {
@@ -184,7 +222,7 @@ export default function HomePage() {
 
     const success = await consumeStream(projectId, res);
 
-    await fetchProjects();
+    await fetchProjects(searchQuery, 1);
     setSyncStates((prev) => ({
       ...prev,
       [projectId]: { ...prev[projectId], done: true },
@@ -199,7 +237,7 @@ export default function HomePage() {
     const proj = projects.find((p) => p.id === projectId);
     if (!proj) return;
     await fetch(`/api/projects/${proj.owner}/${proj.repo}`, { method: "DELETE" });
-    await fetchProjects();
+    await fetchProjects(searchQuery, 1);
   }
 
   return (
@@ -290,13 +328,18 @@ export default function HomePage() {
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
           Tracked Projects
         </h2>
-        {loading ? (
+        {loading && projects.length === 0 ? (
           <div className="text-center py-12 text-gray-500">Loading...</div>
         ) : (
           <ProjectList
             projects={projects}
+            total={total}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
             onCollect={handleCollect}
             onDelete={handleDelete}
+            onSearch={handleSearch}
+            onLoadMore={handleLoadMore}
             syncStates={syncStates}
             readOnly={!isAuthenticated}
           />
